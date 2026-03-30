@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revisão EsFCEx — Magistério de Português</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f5f5f2;color:#1a1a18;min-height:100vh}
+.nav{background:#fff;border-bottom:0.5px solid #ddd;position:sticky;top:0;z-index:50}
+.nav-inner{max-width:900px;margin:0 auto;display:flex;align-items:stretch;overflow-x:auto;scrollbar-width:none}
+.nav-inner::-webkit-scrollbar{display:none}
+.nav-logo{padding:0 1rem;font-size:13px;font-weight:500;color:#888;display:flex;align-items:center;white-space:nowrap;border-right:0.5px solid #eee;flex-shrink:0}
+.nav-tab{padding:14px 18px;font-size:14px;cursor:pointer;color:#888;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;background:transparent;border-top:none;border-left:none;border-right:none;transition:color 0.15s}
+.nav-tab:hover{color:#1a1a18}
+.nav-tab.active{color:#1d4ed8;border-bottom-color:#1d4ed8;font-weight:500}
+.sync-badge{font-size:11px;padding:3px 10px;border-radius:20px;margin:auto 1rem auto auto;flex-shrink:0}
+.sync-ok{background:#EAF3DE;color:#27500A}
+.sync-saving{background:#FAEEDA;color:#633806}
+.sync-err{background:#FCEBEB;color:#501313}
+.page{display:none;padding:1.5rem 1rem;max-width:900px;margin:0 auto}
+.page.active{display:block}
+.hero{text-align:center;padding:2rem 1rem 1.5rem}
+.hero h1{font-size:22px;font-weight:500;margin-bottom:8px}
+.hero p{font-size:14px;color:#666;max-width:480px;margin:0 auto 2rem}
+.overview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:2rem}
+@media(min-width:560px){.overview-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:760px){.overview-grid{grid-template-columns:repeat(5,1fr)}}
+.ov-card{background:#fff;border:0.5px solid #e5e5e5;border-radius:12px;padding:1.25rem 1rem;cursor:pointer;text-align:left;transition:border-color 0.15s}
+.ov-card:hover{border-color:#93c5fd}
+.ov-card .disc{font-size:11px;color:#888;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em}
+.ov-card .nome{font-size:14px;font-weight:500;margin-bottom:10px}
+.ov-card .mini-stats{display:flex;gap:10px;margin-bottom:8px}
+.ov-card .ms{font-size:11px;color:#666}
+.ov-card .ms span{display:block;font-size:16px;font-weight:500;color:#1a1a18}
+.progress-bar{height:4px;border-radius:3px;background:#eee;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.3s}
+.page-header{margin-bottom:1.25rem}
+.page-header h2{font-size:18px;font-weight:500;margin-bottom:4px}
+.page-header p{font-size:13px;color:#666}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.stat-card{background:#eeeee9;border-radius:8px;padding:12px 16px}
+.stat-card .label{font-size:12px;color:#666;margin-bottom:4px}
+.stat-card .value{font-size:20px;font-weight:500}
+.controls{display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.sort-sel{font-size:13px;border:0.5px solid #ccc;border-radius:8px;padding:5px 10px;background:#fff;color:#1a1a18;margin-left:auto}
+.legend{margin-bottom:1rem}
+.legend-title{font-size:11px;color:#888;margin-bottom:6px}
+.legend-row{display:flex;gap:6px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:#555;background:#fff;border:0.5px solid #e5e5e5;border-radius:6px;padding:3px 7px}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.section{margin-bottom:1.25rem}
+.section-title{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;padding-bottom:5px;border-bottom:0.5px solid #ddd}
+.topic-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:0.5px solid transparent;margin-bottom:5px;transition:background 0.3s,border-color 0.3s}
+@media(max-width:560px){
+  .topic-row{grid-template-columns:1fr auto;gap:6px}
+  .urgency-badge{display:none}
+}
+/* Nunca revisado */
+.topic-row.never{background:#fff;border-color:#e5e5e5}
+/* Acerto ruim (vermelho) — independe do tempo */
+.topic-row.red-3{background:#FCEBEB;border-color:#F7C1C1}
+.topic-row.red-2{background:#FAECE7;border-color:#F5C4B3}
+.topic-row.red-1{background:#FAEEDA;border-color:#FAC775}
+/* Acerto bom — esfria com o tempo */
+.topic-row.hot-3{background:#c0e49e;border-color:#639922}   /* revisado há 0-2 dias, 90-100% */
+.topic-row.hot-2{background:#d4edbe;border-color:#97C459}   /* revisado há 0-2 dias, 80-89% */
+.topic-row.hot-1{background:#EAF3DE;border-color:#C0DD97}   /* revisado há 0-2 dias, 70-79% */
+.topic-row.warm-3{background:#dde8c8;border-color:#adc87a}  /* 3-6 dias */
+.topic-row.warm-2{background:#e5ecd4;border-color:#b8cc8a}
+.topic-row.warm-1{background:#edf0dc;border-color:#c5d09a}
+.topic-row.cool-3{background:#e8e8d8;border-color:#c0c0a0}  /* 7-13 dias */
+.topic-row.cool-2{background:#eaeade;border-color:#c5c5aa}
+.topic-row.cool-1{background:#ecece2;border-color:#cacab5}
+.topic-row.cold-3{background:#FAECE7;border-color:#F5C4B3}  /* 14+ dias — esfriou virou quase vermelho */
+.topic-row.cold-2{background:#FAEEDA;border-color:#FAC775}
+.topic-row.cold-1{background:#f5f0e0;border-color:#ddd5b0}
+.topic-name{font-size:14px;color:#1a1a18}
+.urgency-badge{font-size:11px;padding:3px 8px;border-radius:20px;white-space:nowrap;background:rgba(0,0,0,0.06);color:#555}
+.meta-col{text-align:right}
+.acerto-display{font-size:14px;font-weight:500}
+.revisoes-display{font-size:11px;color:#888}
+.btn-revisar{background:#fff;border:0.5px solid #ccc;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;color:#555;white-space:nowrap}
+.btn-revisar:hover{background:#f0f0ed}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;z-index:200}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:1.5rem;width:360px;max-width:95vw}
+.modal h2{font-size:16px;font-weight:500;margin-bottom:4px}
+.modal .sub{font-size:13px;color:#888;margin-bottom:1rem}
+.hist-title{font-size:12px;color:#888;margin-bottom:5px}
+.hist-list{display:flex;flex-direction:column;gap:3px;margin-bottom:1rem;max-height:120px;overflow-y:auto}
+.hist-item{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 8px;background:#f5f5f2;border-radius:4px}
+.hist-pct{font-weight:500}
+.btn-del{background:transparent;border:none;font-size:11px;color:#E24B4A;cursor:pointer;padding:0 4px}
+.empty-hist{font-size:12px;color:#aaa;margin-bottom:1rem}
+.pct-label{font-size:13px;color:#666;margin-bottom:4px}
+.pct-val{font-size:32px;font-weight:500;margin-bottom:8px}
+.modal input[type=range]{width:100%;margin-bottom:1.25rem;accent-color:#3b82f6}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{background:transparent;border:0.5px solid #ccc;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;color:#666}
+.btn-save{background:#dbeafe;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;color:#1d4ed8;font-weight:500}
+.loading{text-align:center;padding:3rem;color:#888;font-size:14px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo">EsFCEx</div>
+    <button class="nav-tab active" onclick="goPage('home',this)">Visão geral</button>
+    <button class="nav-tab" onclick="goPage('LP',this)">Português</button>
+    <button class="nav-tab" onclick="goPage('GEO',this)">Geografia</button>
+    <button class="nav-tab" onclick="goPage('HIS',this)">História</button>
+    <button class="nav-tab" onclick="goPage('PED',this)">Pedagogia</button>
+    <button class="nav-tab" onclick="goPage('LEG',this)">Legislação</button>
+    <span class="sync-badge sync-ok" id="sync-badge">sincronizado</span>
+  </div>
+</nav>
+
+<div class="page active" id="page-home">
+  <div class="hero">
+    <h1>Painel de Revisão</h1>
+    <p>Magistério de Português — EsFCEx. Clique em uma disciplina para revisar os tópicos.</p>
+  </div>
+  <div class="overview-grid" id="ov-grid"><div class="loading">Carregando dados...</div></div>
+</div>
+
+<div class="page" id="page-LP">
+  <div class="page-header"><h2>Língua Portuguesa</h2><p>Resolução de questões</p></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="label">Tópicos</div><div class="value" id="LP-total">—</div></div>
+    <div class="stat-card"><div class="label">Nunca revisados</div><div class="value" id="LP-nunca">—</div></div>
+    <div class="stat-card"><div class="label">Média de acertos</div><div class="value" id="LP-media">—</div></div>
+  </div>
+  <div class="legend" id="LP-legend"></div>
+  <div class="controls">
+    <select class="sort-sel" id="LP-sort" onchange="renderPage('LP')">
+      <option value="urgency">Mais tempo sem revisar</option>
+      <option value="acerto-asc">Menor % de acerto</option>
+      <option value="revisoes-asc">Menos revisões</option>
+      <option value="default">Padrão</option>
+    </select>
+  </div>
+  <div id="LP-content"></div>
+</div>
+
+<div class="page" id="page-GEO">
+  <div class="page-header"><h2>Geografia do Brasil</h2><p>Organização do espaço, questão regional e espaço natural</p></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="label">Tópicos</div><div class="value" id="GEO-total">—</div></div>
+    <div class="stat-card"><div class="label">Nunca revisados</div><div class="value" id="GEO-nunca">—</div></div>
+    <div class="stat-card"><div class="label">Média de acertos</div><div class="value" id="GEO-media">—</div></div>
+  </div>
+  <div class="legend" id="GEO-legend"></div>
+  <div class="controls">
+    <select class="sort-sel" id="GEO-sort" onchange="renderPage('GEO')">
+      <option value="urgency">Mais tempo sem revisar</option>
+      <option value="acerto-asc">Menor % de acerto</option>
+      <option value="revisoes-asc">Menos revisões</option>
+      <option value="default">Padrão</option>
+    </select>
+  </div>
+  <div id="GEO-content"></div>
+</div>
+
+<div class="page" id="page-HIS">
+  <div class="page-header"><h2>História do Brasil</h2><p>Brasil Colonial, Monárquico e Republicano</p></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="label">Tópicos</div><div class="value" id="HIS-total">—</div></div>
+    <div class="stat-card"><div class="label">Nunca revisados</div><div class="value" id="HIS-nunca">—</div></div>
+    <div class="stat-card"><div class="label">Média de acertos</div><div class="value" id="HIS-media">—</div></div>
+  </div>
+  <div class="legend" id="HIS-legend"></div>
+  <div class="controls">
+    <select class="sort-sel" id="HIS-sort" onchange="renderPage('HIS')">
+      <option value="urgency">Mais tempo sem revisar</option>
+      <option value="acerto-asc">Menor % de acerto</option>
+      <option value="revisoes-asc">Menos revisões</option>
+      <option value="default">Padrão</option>
+    </select>
+  </div>
+  <div id="HIS-content"></div>
+</div>
+
+<div class="page" id="page-PED">
+  <div class="page-header"><h2>Pedagogia</h2><p>Autores, teorias e práticas educacionais</p></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="label">Tópicos</div><div class="value" id="PED-total">—</div></div>
+    <div class="stat-card"><div class="label">Nunca revisados</div><div class="value" id="PED-nunca">—</div></div>
+    <div class="stat-card"><div class="label">Média de acertos</div><div class="value" id="PED-media">—</div></div>
+  </div>
+  <div class="legend" id="PED-legend"></div>
+  <div class="controls">
+    <select class="sort-sel" id="PED-sort" onchange="renderPage('PED')">
+      <option value="urgency">Mais tempo sem revisar</option>
+      <option value="acerto-asc">Menor % de acerto</option>
+      <option value="revisoes-asc">Menos revisões</option>
+      <option value="default">Padrão</option>
+    </select>
+  </div>
+  <div id="PED-content"></div>
+</div>
+
+<div class="page" id="page-LEG">
+  <div class="page-header"><h2>Legislação</h2><p>Constituição, LDB, ECA, BNCC e diretrizes nacionais</p></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="label">Tópicos</div><div class="value" id="LEG-total">—</div></div>
+    <div class="stat-card"><div class="label">Nunca revisados</div><div class="value" id="LEG-nunca">—</div></div>
+    <div class="stat-card"><div class="label">Média de acertos</div><div class="value" id="LEG-media">—</div></div>
+  </div>
+  <div class="legend" id="LEG-legend"></div>
+  <div class="controls">
+    <select class="sort-sel" id="LEG-sort" onchange="renderPage('LEG')">
+      <option value="urgency">Mais tempo sem revisar</option>
+      <option value="acerto-asc">Menor % de acerto</option>
+      <option value="revisoes-asc">Menos revisões</option>
+      <option value="default">Padrão</option>
+    </select>
+  </div>
+  <div id="LEG-content"></div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2 id="m-title"></h2>
+    <div class="sub" id="m-sub"></div>
+    <div class="hist-title" id="m-hist-title"></div>
+    <div id="m-hist-list"></div>
+    <div class="pct-label">Porcentagem de acertos nesta revisão</div>
+    <div class="pct-val" id="m-pct-val">50%</div>
+    <input type="range" min="0" max="100" step="5" value="50" id="m-slider"
+      oninput="document.getElementById('m-pct-val').textContent=this.value+'%'">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveRevisao()">Salvar revisão</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBA3rElhXMxQpBqnLk9kQwYq1kUobDppUU",
+  authDomain: "revisao-esfcex.firebaseapp.com",
+  projectId: "revisao-esfcex",
+  storageBucket: "revisao-esfcex.firebasestorage.app",
+  messagingSenderId: "751976254334",
+  appId: "1:751976254334:web:c2ce5b16ac7ba972e8c12f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const DOC_REF = doc(db, "usuarios", "principal");
+
+const TOPICS = [
+  {id:'lp1',area:'LP',g:'',title:'Resolução de questões'},
+
+  {id:'geo1',area:'GEO',g:'Organização do Espaço Brasileiro',title:'Integração ao processo de internacionalização'},
+  {id:'geo2',area:'GEO',g:'Organização do Espaço Brasileiro',title:'Processo de industrialização brasileira'},
+  {id:'geo3',area:'GEO',g:'Organização do Espaço Brasileiro',title:'Rede de transportes brasileira'},
+  {id:'geo4',area:'GEO',g:'Organização do Espaço Brasileiro',title:'Questão urbana brasileira'},
+  {id:'geo5',area:'GEO',g:'Organização do Espaço Brasileiro',title:'Agropecuária, estrutura fundiária e fronteiras agrícolas'},
+  {id:'geo6',area:'GEO',g:'Organização do Espaço Brasileiro',title:'População brasileira: evolução, estrutura e dinâmica'},
+  {id:'geo7',area:'GEO',g:'Organização do Espaço Brasileiro',title:'Distribuição demográfica e migrações internas'},
+  {id:'geo8',area:'GEO',g:'Questão Regional',title:'Regionalização do país e políticas públicas'},
+  {id:'geo9',area:'GEO',g:'Questão Regional',title:'Regiões brasileiras: especializações e características'},
+  {id:'geo10',area:'GEO',g:'Espaço Natural',title:'Geomorfologia e relevo brasileiro'},
+  {id:'geo11',area:'GEO',g:'Espaço Natural',title:'Questão ambiental no Brasil'},
+  {id:'geo12',area:'GEO',g:'Espaço Natural',title:'Recursos minerais'},
+  {id:'geo13',area:'GEO',g:'Espaço Natural',title:'Fontes de energia e recursos hídricos'},
+  {id:'geo14',area:'GEO',g:'Espaço Natural',title:'Biosfera e climas do Brasil'},
+
+  {id:'his1',area:'HIS',g:'Brasil Colonial',title:'Capitanias Hereditárias e Governos Gerais'},
+  {id:'his2',area:'HIS',g:'Brasil Colonial',title:'Atividades econômicas e expansão colonial'},
+  {id:'his3',area:'HIS',g:'Brasil Colonial',title:'Povos indígenas: escravidão, aldeamentos e jesuítas'},
+  {id:'his4',area:'HIS',g:'Brasil Colonial',title:'Povos africanos escravizados no Brasil'},
+  {id:'his5',area:'HIS',g:'Brasil Colonial',title:'Conquista dos sertões: entradas e bandeiras'},
+  {id:'his6',area:'HIS',g:'Brasil Colonial',title:'Sistema colonial'},
+  {id:'his7',area:'HIS',g:'Brasil Colonial',title:'Conflitos coloniais e movimentos rebeldes'},
+  {id:'his8',area:'HIS',g:'Brasil Colonial',title:'Período joanino: transferência da Corte para o Brasil'},
+  {id:'his9',area:'HIS',g:'Brasil Monárquico',title:'Independência do Brasil e Primeiro Reinado'},
+  {id:'his10',area:'HIS',g:'Brasil Monárquico',title:'Constituição de 1824'},
+  {id:'his11',area:'HIS',g:'Brasil Monárquico',title:'Militares: Guarda Nacional e Exército'},
+  {id:'his12',area:'HIS',g:'Brasil Monárquico',title:'Regências (1831–1840) e revoltas políticas'},
+  {id:'his13',area:'HIS',g:'Brasil Monárquico',title:'Consolidação da ordem interna e economia cafeeira'},
+  {id:'his14',area:'HIS',g:'Brasil Monárquico',title:'Modernização: economia e cultura no Império'},
+  {id:'his15',area:'HIS',g:'Brasil Monárquico',title:'Escravidão e lutas escravas pela liberdade'},
+  {id:'his16',area:'HIS',g:'Brasil Monárquico',title:'Abolicionismo e abolição da escravatura'},
+  {id:'his17',area:'HIS',g:'Brasil Monárquico',title:'Trabalho livre e imigração'},
+  {id:'his18',area:'HIS',g:'Brasil Monárquico',title:'Política externa e Guerra do Paraguai'},
+  {id:'his19',area:'HIS',g:'Brasil Monárquico',title:'Movimento republicano e advento da República'},
+  {id:'his20',area:'HIS',g:'Brasil Republicano',title:'Constituição de 1891 e consolidação da República'},
+  {id:'his21',area:'HIS',g:'Brasil Republicano',title:'Política dos Governadores'},
+  {id:'his22',area:'HIS',g:'Brasil Republicano',title:'Coronelismo e sistema eleitoral'},
+  {id:'his23',area:'HIS',g:'Brasil Republicano',title:'Movimento operário'},
+  {id:'his24',area:'HIS',g:'Brasil Republicano',title:'Tenentismo'},
+  {id:'his25',area:'HIS',g:'Brasil Republicano',title:'Revolução de 1930'},
+  {id:'his26',area:'HIS',g:'Brasil Republicano',title:'Período Vargas (1930–1945)'},
+  {id:'his27',area:'HIS',g:'Brasil Republicano',title:'Estado Novo'},
+  {id:'his28',area:'HIS',g:'Brasil Republicano',title:'Brasil na II Guerra Mundial e a FEB'},
+  {id:'his29',area:'HIS',g:'Brasil Republicano',title:'Período democrático (1945–1964)'},
+  {id:'his30',area:'HIS',g:'Brasil Republicano',title:'Intervenção militar (1964–1985)'},
+  {id:'his31',area:'HIS',g:'Brasil Republicano',title:'Milagre econômico'},
+  {id:'his32',area:'HIS',g:'Brasil Republicano',title:'Redemocratização'},
+  {id:'his33',area:'HIS',g:'Brasil Republicano',title:'Movimentos sociais nas décadas de 1970 e 1980'},
+  {id:'his34',area:'HIS',g:'Brasil Republicano',title:'Campanha pelas eleições diretas'},
+  {id:'his35',area:'HIS',g:'Brasil Republicano',title:'Constituição de 1988'},
+  {id:'his36',area:'HIS',g:'Brasil Republicano',title:'Brasil pós-1985: economia, sociedade e cultura'},
+
+  {id:'ped1', area:'PED',g:'Cultura e Escola',          title:'ALCÂNTARA, Wiara — Escola e cultura escolar durante e pós-pandemia'},
+  {id:'ped2', area:'PED',g:'Currículo e Tecnologia',    title:'ALMEIDA, Maria Elizabeth B.; VALENTE, José A. — Integração currículo e tecnologias e narrativas digitais'},
+  {id:'ped3', area:'PED',g:'Cultura e Escola',          title:'BARBOSA, Maria Carmen S. — Culturas escolares, de infância e familiares'},
+  {id:'ped4', area:'PED',g:'Metodologias',              title:'BENDER, Willian N. — Aprendizagem baseada em projetos'},
+  {id:'ped5', area:'PED',g:'Avaliação',                 title:'BONAMINO, Alicia; SOUSA, Sandra Z. — Três gerações de avaliação da educação básica no Brasil'},
+  {id:'ped6', area:'PED',g:'Cultura e Escola',          title:'BOTO, Carlota — A liturgia da escola moderna'},
+  {id:'ped7', area:'PED',g:'Currículo e Tecnologia',    title:'COLL, César; MONEREO, Carles — Psicologia da Educação Virtual'},
+  {id:'ped8', area:'PED',g:'Metodologias',              title:'DIAS, Thalia J. F. et al. — Tendências metodológicas em educação matemática'},
+  {id:'ped9', area:'PED',g:'Desenvolvimento',           title:'FONSECA, Vitor da — Desenvolvimento Psicomotor e Aprendizagem'},
+  {id:'ped10',area:'PED',g:'Alfabetização e Letramento',title:'FRADE, Isabel; ARAÚJO, Mônica; GLÓRIA, Julianna — Multimodalidade na alfabetização'},
+  {id:'ped11',area:'PED',g:'Avaliação',                 title:'HOFFMANN, Jussara — Avaliar para promover'},
+  {id:'ped12',area:'PED',g:'Desenvolvimento',           title:'LA TAILLE, Yves de; OLIVEIRA, Marta Kohl de; DANTAS, Heloysa — Piaget, Vygotsky, Wallon'},
+  {id:'ped13',area:'PED',g:'Formação Docente',          title:'NÓVOA, António — Professores: imagens do futuro presente'},
+  {id:'ped14',area:'PED',g:'Gestão Escolar',            title:'PARO, Vitor H. — A estrutura didática e administrativa da escola'},
+  {id:'ped15',area:'PED',g:'Cultura e Escola',          title:'PAULILO, André Luiz — A compreensão histórica do fracasso escolar no Brasil'},
+  {id:'ped16',area:'PED',g:'Currículo e Tecnologia',    title:'PEIXOTO, Joana — Tecnologias e relações pedagógicas: a questão da mediação'},
+  {id:'ped17',area:'PED',g:'Gestão Escolar',            title:'PEREIRA, Sueli M. — Políticas de Estado e organização político-pedagógica da escola'},
+  {id:'ped18',area:'PED',g:'Alfabetização e Letramento',title:'ROJO, Roxane — Pedagogia dos Multiletramentos'},
+  {id:'ped19',area:'PED',g:'Inclusão',                  title:'ROPOLI, Edilene A. — A Educação Especial na Perspectiva da Inclusão Escolar'},
+  {id:'ped20',area:'PED',g:'Gestão Escolar',            title:'SANTOS, Claudia C. P. et al. — Gestão democrática e instâncias de participação social'},
+  {id:'ped21',area:'PED',g:'Alfabetização e Letramento',title:'SANTOS, Wildson Luiz P. dos — Educação científica na perspectiva de letramento como prática social'},
+  {id:'ped22',area:'PED',g:'Alfabetização e Letramento',title:'SASSERON, Lúcia Helena; CARVALHO, Anna Maria P. de — Alfabetização científica: uma revisão bibliográfica'},
+  {id:'ped23',area:'PED',g:'Currículo e Tecnologia',    title:'SILVA, Roberto R. D. da — Currículo, conhecimento e transmissão cultural'},
+  {id:'ped24',area:'PED',g:'Currículo e Tecnologia',    title:'SILVA, Tomaz Tadeu da — Currículo, conhecimento e democracia'},
+  {id:'ped25',area:'PED',g:'Alfabetização e Letramento',title:'SOARES, Magda — Letramento e alfabetização: as muitas facetas'},
+  {id:'ped26',area:'PED',g:'Formação Docente',          title:'TARDIF, M. — Saberes docentes e formação profissional'},
+  {id:'ped27',area:'PED',g:'Cultura e Escola',          title:'VASCONCELLOS, Celso dos S. — Indisciplina e disciplina escolar'},
+  {id:'ped28',area:'PED',g:'Gestão Escolar',            title:'VEIGA, Ilma Passos A. — Projeto Político-Pedagógico e gestão democrática'},
+  {id:'ped29',area:'PED',g:'Metodologias',              title:'ZABALA, Antoni — A Prática educativa: como ensinar'},
+
+  {id:'leg1', area:'LEG',g:'',title:'Constituição Federal — arts. 205 a 214'},
+  {id:'leg2', area:'LEG',g:'',title:'ECA — arts. selecionados (Lei 8.069/1990)'},
+  {id:'leg3', area:'LEG',g:'',title:'LDB — Lei 9.394/1996'},
+  {id:'leg4', area:'LEG',g:'',title:'DCN Educação Básica — Res. CNE/CEB 04/2010'},
+  {id:'leg5', area:'LEG',g:'',title:'DCN Ensino Fundamental 9 anos — Res. CNE/CEB 07/2010'},
+  {id:'leg6', area:'LEG',g:'',title:'Conselhos escolares — democratização e cidadania'},
+  {id:'leg7', area:'LEG',g:'',title:'Diretrizes para Educação em Direitos Humanos'},
+  {id:'leg8', area:'LEG',g:'',title:'Diretrizes AEE — Educação Especial (Res. 04/2009)'},
+  {id:'leg9', area:'LEG',g:'',title:'Política Nacional de Educação Especial Inclusiva'},
+  {id:'leg10',area:'LEG',g:'',title:'BNCC (2017)'},
+  {id:'leg11',area:'LEG',g:'',title:'Guia sobre usos de telas por crianças e adolescentes'},
+];
+
+const AREAS = {
+  LP:  {label:'Língua Portuguesa', cor:'#3b82f6'},
+  GEO: {label:'Geografia',         cor:'#16a34a'},
+  HIS: {label:'História',          cor:'#d97706'},
+  PED: {label:'Pedagogia',         cor:'#7c3aed'},
+  LEG: {label:'Legislação',        cor:'#db2777'},
+};
+
+const LEGEND_HTML = `
+  <div class="legend-title">Legenda de cores — acerto acumulado + dias sem revisar</div>
+  <div class="legend-row">
+    <div class="legend-item"><div class="legend-dot" style="background:#c0e49e"></div>Quente (revisado recentemente, bom acerto)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#dde8c8"></div>Morno (alguns dias sem revisar)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e8e8d8"></div>Frio (1+ semana sem revisar)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#FAECE7"></div>Gelado (2+ semanas — revisar!)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#F09595"></div>Acerto ruim (&lt;55%)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e5e5e5"></div>Não revisado</div>
+  </div>`;
+
+let state = {};
+let currentModal = null;
+let currentPage = 'home';
+let saveTimeout = null;
+
+// ── FIREBASE ──────────────────────────────────────────
+function setSyncBadge(s) {
+  const b = document.getElementById('sync-badge');
+  b.className = 'sync-badge';
+  if (s==='ok')     { b.classList.add('sync-ok');    b.textContent = 'sincronizado'; }
+  else if(s==='saving'){ b.classList.add('sync-saving'); b.textContent = 'salvando...'; }
+  else              { b.classList.add('sync-err');   b.textContent = 'erro ao salvar'; }
+}
+
+async function loadFromFirebase() {
+  try {
+    const snap = await getDoc(DOC_REF);
+    state = snap.exists() ? (snap.data().state || {}) : {};
+  } catch(e) { console.error(e); state = {}; }
+  TOPICS.forEach(t => { if (!state[t.id]) state[t.id] = {revisoes:0,acertos:[],dates:[],lastDate:null}; });
+  setSyncBadge('ok');
+  renderHome();
+}
+
+function scheduleSave() {
+  setSyncBadge('saving');
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async () => {
+    try { await setDoc(DOC_REF, {state}); setSyncBadge('ok'); }
+    catch(e) { console.error(e); setSyncBadge('err'); }
+  }, 800);
+}
+
+// ── HELPERS ───────────────────────────────────────────
+function daysSince(d) { if (!d) return Infinity; return Math.floor((new Date() - new Date(d)) / 864e5); }
+
+function urgencyText(id) {
+  const s = state[id];
+  if (!s || s.revisoes === 0) return 'Nunca revisado';
+  const d = daysSince(s.lastDate);
+  if (d === 0) return 'Hoje';
+  if (d === 1) return 'Ontem';
+  return d + ' dias atrás';
+}
+
+function avgAcerto(id) {
+  const s = state[id];
+  if (!s || !s.acertos || s.acertos.length === 0) return null;
+  return Math.round(s.acertos.reduce((a,b) => a+b, 0) / s.acertos.length);
+}
+
+// Cor combina acerto médio + dias desde a última revisão
+// Para acertos ruins (<55%) sempre vermelho independente do tempo
+// Para acertos bons, esfria com o tempo: quente → morno → frio → gelado
+function colorClass(id) {
+  const s = state[id];
+  if (!s || s.revisoes === 0) return 'never';
+  const ac = avgAcerto(id);
+  if (ac === null) return 'never';
+
+  // Acerto ruim — vermelho sempre
+  if (ac < 40) return 'red-3';
+  if (ac < 55) return 'red-2';
+
+  // Acerto mediano (55–69%) — amarelado, esfria mais rápido
+  const d = daysSince(s.lastDate);
+  if (ac < 70) {
+    if (d <= 3)  return 'red-1';   // amarelo
+    if (d <= 7)  return 'cool-1';  // cinza-esverdeado
+    return 'cold-1';               // bege-acinzentado
+  }
+
+  // Acerto bom (70%+) — esfria com o tempo
+  // intensidade do verde baseada no acerto
+  const intensity = ac >= 90 ? 3 : ac >= 80 ? 2 : 1;
+
+  if (d <= 2)  return `hot-${intensity}`;   // verde vivo
+  if (d <= 6)  return `warm-${intensity}`;  // verde desbotado
+  if (d <= 13) return `cool-${intensity}`;  // cinza-esverdeado
+  return `cold-${intensity}`;               // bege-alaranjado (gelado)
+}
+
+function urgencyScore(id) {
+  const s = state[id];
+  if (!s || s.revisoes === 0) return 9999;
+  return daysSince(s.lastDate);
+}
+
+// ── NAVEGAÇÃO ─────────────────────────────────────────
+window.goPage = function(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (btn) btn.classList.add('active');
+  currentPage = page;
+  if (page === 'home') renderHome(); else renderPage(page);
+  window.scrollTo(0, 0);
+};
+
+window.goPageByArea = function(a) {
+  const tabs = document.querySelectorAll('.nav-tab');
+  const map = {LP:1,GEO:2,HIS:3,PED:4,LEG:5};
+  goPage(a, tabs[map[a]]);
+};
+
+// ── RENDER HOME ───────────────────────────────────────
+function renderHome() {
+  document.getElementById('ov-grid').innerHTML = Object.keys(AREAS).map(a => {
+    const topics = TOPICS.filter(t => t.area === a);
+    const total  = topics.length;
+    const nunca  = topics.filter(t => !state[t.id] || state[t.id].revisoes === 0).length;
+    const com    = topics.filter(t => avgAcerto(t.id) !== null);
+    const media  = com.length > 0 ? Math.round(com.reduce((s,t) => s + avgAcerto(t.id), 0) / com.length) : null;
+    const pct    = total > 0 ? Math.round(((total - nunca) / total) * 100) : 0;
+    return `<div class="ov-card" onclick="goPageByArea('${a}')">
+      <div class="disc">${a}</div>
+      <div class="nome">${AREAS[a].label}</div>
+      <div class="mini-stats">
+        <div class="ms"><span>${total-nunca}/${total}</span>revisados</div>
+        <div class="ms"><span>${media !== null ? media+'%' : '—'}</span>média</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${AREAS[a].cor}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER PAGE ───────────────────────────────────────
+window.renderPage = function(area) {
+  document.getElementById(area + '-legend').innerHTML = LEGEND_HTML;
+  const sort = document.getElementById(area + '-sort').value;
+  let topics = TOPICS.filter(t => t.area === area);
+  if (sort === 'urgency')      topics.sort((a,b) => urgencyScore(b.id) - urgencyScore(a.id));
+  else if (sort === 'acerto-asc')   topics.sort((a,b) => (avgAcerto(a.id)??-1) - (avgAcerto(b.id)??-1));
+  else if (sort === 'revisoes-asc') topics.sort((a,b) => (state[a.id]?.revisoes||0) - (state[b.id]?.revisoes||0));
+
+  const groups = {};
+  topics.forEach(t => { const g = t.g||'Tópicos'; if(!groups[g]) groups[g]=[]; groups[g].push(t); });
+
+  document.getElementById(area + '-content').innerHTML = Object.entries(groups).map(([g,items]) => `
+    <div class="section">
+      ${g && g !== 'Tópicos' ? `<div class="section-title">${g}</div>` : ''}
+      ${items.map(t => {
+        const ac  = avgAcerto(t.id);
+        const rev = state[t.id]?.revisoes || 0;
+        const cc  = colorClass(t.id);
+        return `<div class="topic-row ${cc}">
+          <div class="topic-name">${t.title}</div>
+          <span class="urgency-badge">${urgencyText(t.id)}</span>
+          <div class="meta-col">
+            <div class="acerto-display">${ac !== null ? ac+'%' : '—'}</div>
+            <div class="revisoes-display">${rev} rev.</div>
+          </div>
+          <button class="btn-revisar" onclick="openModal('${t.id}')">Registrar</button>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+
+  const total = topics.length;
+  const nunca = topics.filter(t => !state[t.id] || state[t.id].revisoes === 0).length;
+  const com   = topics.filter(t => avgAcerto(t.id) !== null);
+  const media = com.length > 0 ? Math.round(com.reduce((s,t) => s + avgAcerto(t.id), 0) / com.length) : null;
+  document.getElementById(area + '-total').textContent = total;
+  document.getElementById(area + '-nunca').textContent = nunca;
+  document.getElementById(area + '-media').textContent = media !== null ? media+'%' : '—';
+};
+
+// ── MODAL ─────────────────────────────────────────────
+window.openModal = function(id) {
+  const t = TOPICS.find(x => x.id === id);
+  currentModal = id;
+  document.getElementById('m-title').textContent = t.title;
+  document.getElementById('m-sub').textContent = AREAS[t.area].label + (t.g ? ' · ' + t.g : '');
+  document.getElementById('m-slider').value = 50;
+  document.getElementById('m-pct-val').textContent = '50%';
+  const s = state[id];
+  const htitle = document.getElementById('m-hist-title');
+  const hlist  = document.getElementById('m-hist-list');
+  if (s.acertos && s.acertos.length > 0) {
+    htitle.textContent = 'Histórico';
+    hlist.innerHTML = '<div class="hist-list">' +
+      [...s.acertos].map((a,i) => `
+        <div class="hist-item">
+          <span>${s.dates && s.dates[i] ? s.dates[i] : '—'}</span>
+          <span class="hist-pct">${a}%</span>
+          <button class="btn-del" onclick="delRevisao('${id}',${i})">remover</button>
+        </div>`).reverse().join('') + '</div>';
+  } else {
+    htitle.textContent = '';
+    hlist.innerHTML = '<div class="empty-hist">Nenhuma revisão ainda.</div>';
+  }
+  document.getElementById('modal').classList.add('open');
+};
+
+window.delRevisao = function(id, idx) {
+  const s = state[id];
+  s.acertos.splice(idx, 1);
+  if (s.dates) s.dates.splice(idx, 1);
+  s.revisoes = s.acertos.length;
+  s.lastDate = s.dates && s.dates.length > 0
+    ? new Date(s.dates[s.dates.length-1].split('/').reverse().join('-')).toISOString().split('T')[0]
+    : null;
+  scheduleSave();
+  openModal(id);
+  if (currentPage !== 'home') renderPage(currentPage); else renderHome();
+};
+
+window.closeModal = function() {
+  document.getElementById('modal').classList.remove('open');
+  currentModal = null;
+};
+
+window.saveRevisao = function() {
+  if (!currentModal) return;
+  const pct = parseInt(document.getElementById('m-slider').value);
+  const s = state[currentModal];
+  s.revisoes = (s.revisoes || 0) + 1;
+  s.acertos  = (s.acertos  || []).concat(pct);
+  if (!s.dates) s.dates = [];
+  s.dates.push(new Date().toLocaleDateString('pt-BR'));
+  s.lastDate = new Date().toISOString().split('T')[0];
+  scheduleSave();
+  closeModal();
+  if (currentPage === 'home') renderHome(); else renderPage(currentPage);
+};
+
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+// ── INIT ──────────────────────────────────────────────
+setSyncBadge('saving');
+loadFromFirebase();
+</script>
+</body>
+</html>
