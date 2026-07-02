@@ -312,6 +312,51 @@ body:not(.light) .btn-theme:hover{background:#1a2740;color:#e8edf5}
 /* modal inputs */
 body:not(.light) input[type=range]{accent-color:#3b82f6}
 
+
+/* ── FECHAR MATÉRIA ── */
+.header-flex{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.selo-fechada{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#f5c518,#d4920a);color:#3a2a00;font-size:13px;font-weight:700;vertical-align:middle;margin-left:4px}
+.btn-fechar{font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text2);white-space:nowrap}
+.btn-fechar:hover{border-color:#f5c518;color:#f5c518}
+.materia-fechada-banner{font-size:12px;color:#d4a017;background:linear-gradient(135deg,rgba(245,197,24,0.08),rgba(212,146,10,0.05));border:0.5px solid rgba(245,197,24,0.3);border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn-reabrir{font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer;border:0.5px solid rgba(245,197,24,0.4);background:transparent;color:#d4a017}
+.btn-reabrir:hover{background:rgba(245,197,24,0.1)}
+body.light .materia-fechada-banner{color:#92660a;background:#fdf8e7;border-color:#e8d48a}
+body.light .btn-reabrir{color:#92660a;border-color:#d4b85a}
+
+/* ── JORNADA (tela de conquista) ── */
+.jornada{background:linear-gradient(160deg,#131c2e 0%,#1a2438 45%,#20263a 100%);border:0.5px solid rgba(245,197,24,0.25);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
+body.light .jornada{background:linear-gradient(160deg,#fdfaf1 0%,#faf4e0 100%);border-color:#e8d48a}
+.jornada::before{content:'';position:absolute;top:-60px;right:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(245,197,24,0.12),transparent 70%);pointer-events:none}
+.jornada-header{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.jornada-header .j-icon{font-size:26px}
+.jornada-header h2{font-size:17px;font-weight:600;color:#f5c518;letter-spacing:0.02em}
+body.light .jornada-header h2{color:#a8790c}
+.jornada-sub{font-size:12px;color:var(--text2);margin-bottom:1.25rem}
+.jornada-final{font-size:14px;color:#f5c518;font-weight:500;margin-bottom:1.25rem;padding:10px 14px;background:rgba(245,197,24,0.08);border-radius:8px;border:0.5px solid rgba(245,197,24,0.25);line-height:1.6}
+body.light .jornada-final{color:#92660a;background:#fdf5da;border-color:#e8d48a}
+.jornada-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1.25rem}
+@media(min-width:640px){.jornada-grid{grid-template-columns:repeat(4,1fr)}}
+.j-stat{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px}
+body.light .j-stat{background:rgba(255,255,255,0.6);border-color:#e8dcb8}
+.j-stat .js-num{font-size:22px;font-weight:600;color:var(--text)}
+.j-stat .js-label{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4}
+.j-stat .js-detail{font-size:10px;color:#d4a017;margin-top:4px}
+.jornada-medals{display:flex;gap:8px;flex-wrap:wrap}
+.medal{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--text)}
+body.light .medal{background:rgba(255,255,255,0.7);border-color:#e8dcb8}
+.medal.fechada{border-color:rgba(245,197,24,0.45);background:rgba(245,197,24,0.07)}
+.medal .m-dot{width:8px;height:8px;border-radius:50%}
+.medal .m-check{color:#f5c518;font-weight:700}
+
+
+.topic-actions-row{display:flex;gap:10px;align-items:center;margin-top:4px}
+.topic-actions-row .notes-toggle{margin-top:0}
+.topic-close-btn{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text3);cursor:pointer;background:none;border:none;padding:0;line-height:1}
+.topic-close-btn:hover{color:#d4a017}
+.topic-close-btn.fechado{color:#d4a017;font-weight:500}
+body.light .topic-close-btn.fechado{color:#92660a}
+
 </style>
 </head>
 <body>
@@ -337,6 +382,7 @@ body:not(.light) input[type=range]{accent-color:#3b82f6}
 
 <div class="page active" id="page-home">
   <div class="hero"><h1>Painel de Revisão</h1><p>Magistério de Português — EsFCEx</p></div>
+  <div id="jornada-box"></div>
   <div class="kpi-grid" id="kpi-grid"><div class="loading">Carregando...</div></div>
   <div class="streak-box" id="streak-box"></div>
   <div class="section-title-home">Alertas de revisão</div>
@@ -549,6 +595,8 @@ const LEGEND_HTML=`
 
 let state={};
 let notes={};
+let closed={};
+let closedTopics={};
 let currentModal=null;
 let currentTipo=null;  // 'estudo' | 'questoes'
 let currentPage='home';
@@ -580,7 +628,7 @@ function setSyncBadge(s){
 
 // Salva cópia local sempre que salva no Firebase
 function saveLocalBackup(){
-  try{localStorage.setItem(LOCAL_BACKUP_KEY,JSON.stringify({state,notes,ts:new Date().toISOString()}));}catch(e){}
+  try{localStorage.setItem(LOCAL_BACKUP_KEY,JSON.stringify({state,notes,closed,closedTopics,ts:new Date().toISOString()}));}catch(e){}
 }
 function loadLocalBackup(){
   try{const r=localStorage.getItem(LOCAL_BACKUP_KEY);return r?JSON.parse(r):null;}catch(e){return null;}
@@ -598,6 +646,8 @@ async function loadFromFirebase(){
       const d=snap.data();
       const fbState=d.state||{};
       const fbNotes=d.notes||{};
+      closed=d.closed||{};
+      closedTopics=d.closedTopics||{};
       // migrar registros antigos
       Object.keys(fbState).forEach(id=>{
         const s=fbState[id];
@@ -639,7 +689,7 @@ function scheduleSave(){
   setSyncBadge('saving');clearTimeout(saveTimeout);
   saveTimeout=setTimeout(async()=>{
     try{
-      await setDoc(DOC_REF,{state,notes});
+      await setDoc(DOC_REF,{state,notes,closed,closedTopics});
       saveLocalBackup(); // sempre salva cópia local após Firebase
       setSyncBadge('ok');
     }catch(e){setSyncBadge('err');}
@@ -652,6 +702,8 @@ window.restoreFromLocalBackup=function(){
   if(!backup)return;
   state=backup.state||{};
   notes=backup.notes||{};
+  closed=backup.closed||{};
+  closedTopics=backup.closedTopics||{};
   TOPICS.forEach(t=>{
     if(!state[t.id])state[t.id]={revisoes:0,entries:[],lastDate:null};
     if(!state[t.id].entries)state[t.id].entries=[];
@@ -667,7 +719,7 @@ window.dismissWarn=function(){
 
 // Exportar backup JSON
 window.exportBackup=function(){
-  const data=JSON.stringify({state,notes,ts:new Date().toISOString()},null,2);
+  const data=JSON.stringify({state,notes,closed,closedTopics,ts:new Date().toISOString()},null,2);
   const blob=new Blob([data],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -686,7 +738,7 @@ window.importBackup=function(event){
       const data=JSON.parse(e.target.result);
       if(!data.state){alert('Arquivo inválido.');return;}
       if(!confirm('Isso vai substituir todos os seus dados atuais pelo backup. Confirma?'))return;
-      state=data.state;notes=data.notes||{};
+      state=data.state;notes=data.notes||{};closed=data.closed||{};closedTopics=data.closedTopics||{};
       TOPICS.forEach(t=>{
         if(!state[t.id])state[t.id]={revisoes:0,entries:[],lastDate:null};
         if(!state[t.id].entries)state[t.id].entries=[];
@@ -716,7 +768,13 @@ function avgAcerto(id){
 // total de revisões (estudo + questões)
 function totalRevs(id){return getEntries(id).length;}
 
+function isClosed(id){
+  if(closedTopics[id])return true;
+  const t=TOPICS.find(x=>x.id===id);
+  return t&&closed[t.area];
+}
 function urgencyText(id){
+  if(isClosed(id))return '✓ Fechada';
   const s=state[id];if(!s||!s.lastDate)return 'Nunca revisado';
   const d=daysSince(s.lastDate);
   if(d===0)return 'Hoje';if(d===1)return 'Ontem';return d+' dias atrás';
@@ -725,7 +783,8 @@ function urgencyText(id){
 function colorClass(id){
   const s=state[id];if(!s||!s.lastDate)return 'never';
   const ac=avgAcerto(id);
-  const d=daysSince(s.lastDate);
+  // matéria fechada: congela o tempo (sempre "quente"), só o acerto define a cor
+  const d=isClosed(id)?0:daysSince(s.lastDate);
   // sem questões ainda mas tem estudo — usa cor neutra que esfria
   if(ac===null){
     if(d<=2)return 'warm-1';if(d<=6)return 'cool-1';if(d<=13)return 'cold-1';return 'cold-1';
@@ -737,10 +796,39 @@ function colorClass(id){
 }
 
 function urgencyScore(id){
+  if(isClosed(id))return -1;
   const s=state[id];if(!s||!s.lastDate)return 9999;return daysSince(s.lastDate);
 }
 function barColor(v){return v>=80?'#639922':v>=70?'#97C459':v>=55?'#EF9F27':'#E24B4A';}
 function destroyChart(id){if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];}}
+
+
+// ── FECHAR MATÉRIA ──
+window.fecharMateria=function(area){
+  if(!confirm(`Fechar ${AREAS[area].label}? Todos os tópicos ganham o selo de concluído, o tempo para de contar e as cores congelam. Você pode reabrir quando quiser.`))return;
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  closed[area]=hoje;
+  TOPICS.filter(t=>t.area===area).forEach(t=>{closedTopics[t.id]=hoje;});
+  scheduleSave();
+  renderPage(area);
+};
+
+window.fecharTopico=function(id){
+  closedTopics[id]=new Date().toLocaleDateString('pt-BR');
+  scheduleSave();
+  if(currentPage!=='home')renderPage(currentPage);else renderHome();
+};
+window.reabrirTopico=function(id){
+  delete closedTopics[id];
+  scheduleSave();
+  if(currentPage!=='home')renderPage(currentPage);else renderHome();
+};
+window.reabrirMateria=function(area){
+  delete closed[area];
+  TOPICS.filter(t=>t.area===area).forEach(t=>{delete closedTopics[t.id];});
+  scheduleSave();
+  renderPage(area);
+};
 
 // ── NOTES ──
 const noteIconSvg=`<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2h12v10H9l-3 3v-3H2z"/></svg>`;
@@ -771,9 +859,14 @@ function topicBlock(t){
     <div class="topic-row ${cc}">
       <div class="topic-left">
         <div class="topic-name">${t.title.replace(/\s*\([^)]+\)\s*$/, '')}</div>${t.title.match(/\(([^)]+)\)$/) ? '<div class="topic-cat">→ Questões: ' + t.title.match(/\(([^)]+)\)$/)[1] + '</div>' : ''}
-        <button class="notes-toggle${hasNote?' has-note':''}" id="notes-btn-${t.id}" onclick="toggleNote('${t.id}')">
-          ${noteIconSvg}<span>${hasNote?'ver anotação':'anotar'}</span>
-        </button>
+        <div class="topic-actions-row">
+          <button class="notes-toggle${hasNote?' has-note':''}" id="notes-btn-${t.id}" onclick="toggleNote('${t.id}')">
+            ${noteIconSvg}<span>${hasNote?'ver anotação':'anotar'}</span>
+          </button>
+          ${closedTopics[t.id]
+            ?`<button class="topic-close-btn fechado" onclick="reabrirTopico('${t.id}')" title="Fechado em ${closedTopics[t.id]} — clique para reabrir">✓ fechado</button>`
+            :(closed[t.area]?'':`<button class="topic-close-btn" onclick="fecharTopico('${t.id}')" title="Fechar este tópico">🏁 fechar</button>`)}
+        </div>
       </div>
       <span class="urgency-badge">${urgencyText(t.id)}</span>
       <div class="meta-col">
@@ -795,7 +888,95 @@ function topicBlock(t){
 }
 
 // ── HOME ──
-function renderHome(){renderKPIs();renderStreak();renderAlerts();renderHeatmap();renderOverviewGrid();}
+function renderHome(){renderJornada();renderKPIs();renderStreak();renderAlerts();renderHeatmap();renderOverviewGrid();}
+
+// ── JORNADA (tela de conquista) ──
+function renderJornada(){
+  const box=document.getElementById('jornada-box');
+  const closedAreas=Object.keys(closed);
+  const nTopicosFechados=Object.keys(closedTopics).length;
+  if(closedAreas.length===0&&nTopicosFechados===0){box.innerHTML='';return;}
+
+  // coleta todas as datas de revisão
+  const allIso=[];
+  TOPICS.forEach(t=>{getEntries(t.id).forEach(e=>{
+    if(e.date){const iso=e.date.includes('/')?e.date.split('/').reverse().join('-'):e.date;allIso.push(iso);}
+  });});
+  allIso.sort();
+  const primeiroDia=allIso[0]||null;
+  const ultimoDia=allIso[allIso.length-1]||null;
+  const diasJornada=primeiroDia?Math.max(1,Math.round((new Date(ultimoDia)-new Date(primeiroDia))/864e5)+1):0;
+  const diasAtivos=new Set(allIso).size;
+
+  const tRevs=TOPICS.reduce((s,t)=>s+totalRevs(t.id),0);
+  const nEstudos=TOPICS.reduce((s,t)=>s+getEntries(t.id).filter(e=>e.tipo==='estudo').length,0);
+  const nQuestoes=tRevs-nEstudos;
+
+  const dominados=TOPICS.filter(t=>{const a=avgAcerto(t.id);return a!==null&&a>=80;}).length;
+  const cobertos=TOPICS.filter(t=>state[t.id]&&state[t.id].lastDate).length;
+  const pctEdital=Math.round(cobertos/TOPICS.length*100);
+
+  // melhor matéria
+  let melhorArea=null,melhorMedia=-1;
+  Object.keys(AREAS).forEach(a=>{
+    const com=TOPICS.filter(t=>t.area===a&&avgAcerto(t.id)!==null);
+    if(!com.length)return;
+    const m=Math.round(com.reduce((s,t)=>s+avgAcerto(t.id),0)/com.length);
+    if(m>melhorMedia){melhorMedia=m;melhorArea=a;}
+  });
+
+  // tópico mais persistente
+  let persistente=null,maxRev=0;
+  TOPICS.forEach(t=>{const r=totalRevs(t.id);if(r>maxRev){maxRev=r;persistente=t;}});
+
+  // maior evolução (primeira vs última questão)
+  let evol=null,evolDiff=-Infinity;
+  TOPICS.forEach(t=>{
+    const qs=getEntries(t.id).filter(e=>e.tipo==='questoes'&&e.acerto!=null);
+    if(qs.length>=2){const d=qs[qs.length-1].acerto-qs[0].acerto;if(d>evolDiff){evolDiff=d;evol=t;}}
+  });
+
+  // melhor sequência
+  const uniq=[...new Set(allIso)].sort();
+  let best=uniq.length?1:0,cur=1;
+  for(let j=1;j<uniq.length;j++){
+    const diff=(new Date(uniq[j])-new Date(uniq[j-1]))/864e5;
+    if(diff===1){cur++;best=Math.max(best,cur);}else cur=1;
+  }
+
+  const allClosed=closedAreas.length===Object.keys(AREAS).length;
+  const fmtData=d=>{if(!d)return '—';const p=d.split('-');return `${p[2]}/${p[1]}/${p[0]}`;};
+
+  const finalMsg=allClosed?`
+    <div class="jornada-final">🎖️ <strong>Missão cumprida.</strong> Foram ${diasJornada} dias de jornada, ${tRevs} revisões e ${dominados} tópicos dominados. Tudo o que podia ser feito, foi feito — agora é confiar no trabalho. Boa prova, professor!</div>`:'';
+
+  const medals=Object.keys(AREAS).map(a=>{
+    const isC=!!closed[a];
+    return `<div class="medal${isC?' fechada':''}">
+      <span class="m-dot" style="background:${AREAS[a].cor}"></span>
+      ${AREAS[a].label}
+      ${isC?'<span class="m-check">✓</span>':''}
+    </div>`;
+  }).join('');
+
+  box.innerHTML=`<div class="jornada">
+    <div class="jornada-header"><span class="j-icon">🏆</span><h2>Sua Jornada</h2></div>
+    <div class="jornada-sub">De ${fmtData(primeiroDia)} a ${fmtData(ultimoDia)} — o registro do seu esforço</div>
+    ${finalMsg}
+    <div class="jornada-grid">
+      <div class="j-stat"><div class="js-num">${diasJornada}</div><div class="js-label">dias de jornada</div><div class="js-detail">${diasAtivos} com revisão ativa</div></div>
+      <div class="j-stat"><div class="js-num">${tRevs}</div><div class="js-label">revisões no total</div><div class="js-detail">${nEstudos} estudos · ${nQuestoes} questões</div></div>
+      <div class="j-stat"><div class="js-num">${dominados}</div><div class="js-label">tópicos dominados (80%+)</div><div class="js-detail">${pctEdital}% do edital coberto</div></div>
+      <div class="j-stat"><div class="js-num">${best}</div><div class="js-label">melhor sequência de dias</div><div class="js-detail">disciplina de atleta</div></div>
+      ${melhorArea?`<div class="j-stat"><div class="js-num">${melhorMedia}%</div><div class="js-label">melhor matéria</div><div class="js-detail">${AREAS[melhorArea].label}</div></div>`:''}
+      ${persistente?`<div class="j-stat"><div class="js-num">${maxRev}×</div><div class="js-label">tópico mais lapidado</div><div class="js-detail">${persistente.title.length>40?persistente.title.substring(0,38)+'…':persistente.title}</div></div>`:''}
+      ${evol&&evolDiff>0?`<div class="j-stat"><div class="js-num">+${evolDiff}pp</div><div class="js-label">maior evolução</div><div class="js-detail">${evol.title.length>40?evol.title.substring(0,38)+'…':evol.title}</div></div>`:''}
+      <div class="j-stat"><div class="js-num">${nTopicosFechados}/${TOPICS.length}</div><div class="js-label">tópicos fechados</div><div class="js-detail">${closedAreas.length}/${Object.keys(AREAS).length} matérias completas${allClosed?' — jornada completa!':''}</div></div>
+    </div>
+    <div class="jornada-medals">${medals}</div>
+  </div>`;
+}
+
 
 function renderKPIs(){
   const total=TOPICS.length;
@@ -827,7 +1008,7 @@ function renderStreak(){
 
 function renderAlerts(){
   const cands=TOPICS
-    .filter(t=>state[t.id]&&state[t.id].lastDate)
+    .filter(t=>state[t.id]&&state[t.id].lastDate&&!isClosed(t.id))
     .map(t=>({t,ac:avgAcerto(t.id),d:daysSince(state[t.id].lastDate)}))
     .filter(x=>x.ac<70||x.d>7)
     .sort((a,b)=>((a.ac!=null?100-a.ac:50)+a.d*2)-((b.ac!=null?100-b.ac:50)+b.d*2)).reverse().slice(0,5);
@@ -876,8 +1057,12 @@ function renderOverviewGrid(){
 
 // ── BUILD PAGE ──
 function buildPage(area){
+  const isC=!!closed[area];
+  const headerExtra=isC
+    ?`<div class="materia-fechada-banner">🎖️ Matéria fechada em ${closed[area]} — o tempo parou de contar. <button class="btn-reabrir" onclick="reabrirMateria('${area}')">Reabrir</button></div>`
+    :`<button class="btn-fechar" onclick="fecharMateria('${area}')">🏁 Fechar matéria</button>`;
   document.getElementById('page-'+area).innerHTML=`
-    <div class="page-header"><h2>${AREAS[area].label}</h2></div>
+    <div class="page-header header-flex"><h2>${AREAS[area].label}${isC?' <span class="selo-fechada">✓</span>':''}</h2>${headerExtra}</div>
     <div class="stats-grid">
       <div class="stat-card"><div class="label">Tópicos</div><div class="value" id="${area}-total">—</div></div>
       <div class="stat-card"><div class="label">Nunca revisados</div><div class="value" id="${area}-nunca">—</div></div>
