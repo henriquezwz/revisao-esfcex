@@ -183,7 +183,7 @@ textarea.note:focus{border-color:var(--blue)}
 <div id="layer"><div class="back"></div><div class="sheet"></div></div>
 
 <script>
-const VERSAO = "02/11 16:30";
+const VERSAO = "02/11 17:30";
 const FB_V = "12.19.0";
 /* banco da temporada 2026 (o mesmo do site antigo). 2026 fica em usuarios/principal e só é LIDO. */
 const FB_CFG = {apiKey:"AIzaSyBA3rElhXMxQpBqnLk9kQwYq1kUobDppUU",authDomain:"revisao-esfcex.firebaseapp.com",projectId:"revisao-esfcex",storageBucket:"revisao-esfcex.firebasestorage.app",messagingSenderId:"751976254334",appId:"1:751976254334:web:c2ce5b16ac7ba972e8c12f"};
@@ -211,9 +211,9 @@ function dif(a,b){return Math.round((new Date(a+"T12:00")-new Date(b+"T12:00"))/
 const fmt=d=>d?d.slice(8,10)+"/"+d.slice(5,7):"—";
 
 /* ── estado ── */
-function novo(){return {ts:0,prova:"2027-08-01",fimLeitura:"2027-03-31",fase:1,revNaLeitura:false,top:{},notas:{},ass:{},h:null,notasImportadas:false};}
+function novo(){return {ts:0,prova:"2027-08-01",fimLeitura:"2027-01-31",fase:1,revNaLeitura:false,top:{},notas:{},ass:{},h:null,notasImportadas:false};}
 let S; try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
-S=Object.assign(novo(),S||{});
+S=Object.assign(novo(),S||{});if(S.fimLeitura==="2027-03-31")S.fimLeitura="2027-01-31";
 const R=id=>S.top[id]?.reg||[];
 const reg=id=>(S.top[id]||(S.top[id]={reg:[]})).reg;
 const estudado=id=>R(id).some(r=>r.t==="e");
@@ -272,7 +272,7 @@ async function baixar(){
   try{
     const f=await prazo(nuvem());
     const sn=await prazo(f.F.getDoc(f.F.doc(f.db,...DOC_2027)));
-    if(sn.exists()&&(sn.data().ts||0)>(S.ts||0)){S=Object.assign(novo(),sn.data());try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+    if(sn.exists()&&(sn.data().ts||0)>(S.ts||0)){S=Object.assign(novo(),sn.data());if(S.fimLeitura==="2027-03-31")S.fimLeitura="2027-01-31";try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
     else if(S.ts&&!sn.exists())subir();
     if(!S.h){const v=await prazo(f.F.getDoc(f.F.doc(f.db,...DOC_2026)));if(v.exists()){resumir2026(v.data());salvar();}}
     setSync("salvo");render();
