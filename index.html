@@ -145,19 +145,36 @@ textarea.note:focus{border-color:var(--blue)}
 .banner{background:var(--tang-soft);border-radius:12px;padding:10px 12px;font-size:13.5px;display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .banner button{margin-left:auto;font-weight:700;color:#b8410c;white-space:nowrap}
 :root[data-tema="escuro"] .banner button{color:var(--tang)}
+.item .t1.full{white-space:normal;line-height:1.3;font-size:14px}
+.cmp{font-size:12.5px;border-radius:12px;padding:10px 12px;margin:10px 0;background:var(--sunk)}
+.cmp.up{background:var(--mint-soft)}.cmp.down{background:var(--danger-soft)}
+.nrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nbox{background:var(--sunk);border-radius:12px;padding:8px;text-align:center}
+.nbox label{font-size:12px;color:var(--muted);font-weight:600}
+.nbox div{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:4px}
+.nbox button{width:40px;height:40px;border-radius:10px;background:var(--surface);font-size:18px;font-weight:700}
+.nbox input{width:56px;height:40px;text-align:center;border:none;background:transparent;font-family:var(--f-num);font-size:22px;font-weight:700;outline:none}
+.solid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.solid3 div{border-radius:12px;padding:10px;text-align:center}
+.solid3 b{display:block;font-family:var(--f-num);font-size:22px}
+.solid3 span{font-size:11.5px;color:var(--muted)}
+.fase{display:inline-block;font-size:11px;font-weight:700;background:rgba(255,255,255,.2);border-radius:99px;padding:3px 9px;margin-bottom:6px}
+.tab.cfg{margin-left:auto}
+.sw{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px}
+.sw input{width:22px;height:22px;accent-color:var(--blue)}
 </style>
 </head>
 <body>
 <header class="top"><div class="wrap">
   <div class="topbar">
-    <div class="brand"><i>✎</i>Caderno de Estudos</div>
+    <div class="brand"><i>✎</i>Estudos</div>
     <div class="sp"></div>
-    <span class="sync" id="sync">local</span>
+    <span class="sync" id="sync">…</span>
     <button class="ico" id="btTema" aria-label="Tema">☀</button>
   </div>
   <div class="tabs" role="tablist" id="tabs"></div>
   <div class="quick">
-    <input id="q" placeholder="koch 8/10 · estudei boto · errei crase" autocomplete="off" enterkeyhint="send">
+    <input id="q" placeholder="estudei boto · koch 8/10 · errei crase" autocomplete="off" enterkeyhint="send">
     <button id="qGo" disabled>Lançar</button>
   </div>
   <div class="pills" id="pills"></div>
@@ -166,429 +183,311 @@ textarea.note:focus{border-color:var(--blue)}
 <div id="layer"><div class="back"></div><div class="sheet"></div></div>
 
 <script>
-const VERSAO = "02/11 15:00";
+const VERSAO = "02/11 16:30";
 const FB_V = "12.19.0";
-const FB_CFG = {apiKey:"AIzaSyA7FLZU72kH_8XIiwVFwoIA1AC-koh_EYU",authDomain:"caderneta-80f6f.firebaseapp.com",projectId:"caderneta-80f6f",storageBucket:"caderneta-80f6f.firebasestorage.app",messagingSenderId:"369498602261",appId:"1:369498602261:web:86b8fc5d9fa870cfb7471c"};
-const LS = "estudos_v1";
+/* banco da temporada 2026 (o mesmo do site antigo). 2026 fica em usuarios/principal e só é LIDO. */
+const FB_CFG = {apiKey:"AIzaSyBA3rElhXMxQpBqnLk9kQwYq1kUobDppUU",authDomain:"revisao-esfcex.firebaseapp.com",projectId:"revisao-esfcex",storageBucket:"revisao-esfcex.firebasestorage.app",messagingSenderId:"751976254334",appId:"1:751976254334:web:c2ce5b16ac7ba972e8c12f"};
+const DOC_2026 = ["usuarios","principal"], DOC_2027 = ["usuarios","temporada2027"];
+const LS = "estudos2027";
 
-/* ── EDITAL ── modo 'q' = estuda por questões (gramática/consulta): não entra no plano de leitura */
 const RAW = [["lp1", "LP", "Gramática e Norma", "ALMEIDA, Napoleão Mendes de — Dicionário de questões vernáculas"], ["lp2", "LP", "Ensino e Interação", "ANTUNES, Irandé — Aula de português: encontro & interação"], ["lp3", "LP", "Linguagem e Discurso", "BAKHTIN, Mikhail — Estética da criação verbal"], ["lp4", "LP", "Gramática e Norma", "BECHARA, Evanildo — Moderna Gramática Portuguesa"], ["lp5", "LP", "Legislação e Documentos Oficiais", "BRASIL — Base Nacional Comum Curricular (2018)"], ["lp6", "LP", "Legislação e Documentos Oficiais", "BRASIL — Manual de Redação da Presidência da República (3. ed.)"], ["lp7", "LP", "Gramática e Norma", "FERREIRA, Aurélio Buarque de Holanda — Novo Dicionário da Língua Portuguesa"], ["lp8", "LP", "Produção Textual e Gêneros", "KOCH, Ingedore G. V.; ELIAS, Vanda Maria — Ler e Escrever: estratégias de produção textual"], ["lp9", "LP", "Produção Textual e Gêneros", "MARCUSCHI, Luiz Antônio — Produção textual, análise de gêneros e compreensão"], ["lp10", "LP", "Produção Textual e Gêneros", "MARQUESI, Sueli C.; PAULIUKONIS, Aparecida L.; ELIAS, Vanda Maria — Linguística Textual e ensino"], ["lp11", "LP", "Linguagem e Discurso", "MARTINS, Nilce Sant'anna — Introdução à estilística"], ["lp12", "LP", "Gramática e Norma", "NEVES, Maria Helena Moura — Que gramática estudar na escola?"], ["lp13", "LP", "Produção Textual e Gêneros", "SCHNEUWLY, Bernard; DOLZ, Joaquim — Gêneros orais e escritos na escola"], ["geo1", "GEO", "Organização do Espaço Brasileiro", "Integração ao processo de internacionalização (Integração Regional · Globalização · Desenvolvimento)"], ["geo2", "GEO", "Organização do Espaço Brasileiro", "Processo de industrialização brasileira (Industrialização · 7.3 Indústria brasileira)"], ["geo3", "GEO", "Organização do Espaço Brasileiro", "Rede de transportes brasileira (Industrialização · 7.3 Indústria brasileira)"], ["geo4", "GEO", "Organização do Espaço Brasileiro", "Questão urbana brasileira (Urbanização · 6.5 Urbanização brasileira)"], ["geo5", "GEO", "Organização do Espaço Brasileiro", "Agropecuária, estrutura fundiária e fronteiras agrícolas (Agropecuária · 4.5 Agricultura brasileira · 4.6 Questão Fundiária)"], ["geo6", "GEO", "Organização do Espaço Brasileiro", "População brasileira: evolução, estrutura e dinâmica (População · 5.5 População brasileira)"], ["geo7", "GEO", "Organização do Espaço Brasileiro", "Distribuição demográfica e migrações internas (População · 5.3 Migrações · 5.5 População brasileira)"], ["geo8", "GEO", "Questão Regional", "Regionalização do país e políticas públicas (Regionalização Brasileira)"], ["geo9", "GEO", "Questão Regional", "Regiões brasileiras: especializações e características (Regionalização Brasileira · Desenvolvimento)"], ["geo10", "GEO", "Espaço Natural", "Geomorfologia e relevo brasileiro (Geografia Física · 3.1 Relevo · Geologia)"], ["geo11", "GEO", "Espaço Natural", "Questão ambiental no Brasil (Meio Ambiente na Geografia · 9.2 Impactos no meio natural e rural · Amazônia)"], ["geo12", "GEO", "Espaço Natural", "Recursos minerais (Geologia · Energia · 8.3 Fontes de energia e recursos naturais)"], ["geo13", "GEO", "Espaço Natural", "Fontes de energia e recursos hídricos (Energia · 8.2 Produção e consumo no Brasil · Geografia Física · 3.5 Hidrografia)"], ["geo14", "GEO", "Espaço Natural", "Biosfera e climas do Brasil (Geografia Física · 3.3 Clima · 3.4 Vegetação)"], ["his1", "HIS", "Brasil Colonial", "Capitanias Hereditárias e Governos Gerais"], ["his2", "HIS", "Brasil Colonial", "Atividades econômicas e expansão colonial"], ["his3", "HIS", "Brasil Colonial", "Povos indígenas: escravidão, aldeamentos e jesuítas"], ["his4", "HIS", "Brasil Colonial", "Povos africanos escravizados no Brasil"], ["his5", "HIS", "Brasil Colonial", "Conquista dos sertões: entradas e bandeiras"], ["his6", "HIS", "Brasil Colonial", "Sistema colonial"], ["his7", "HIS", "Brasil Colonial", "Conflitos coloniais e movimentos rebeldes"], ["his8", "HIS", "Brasil Colonial", "Período joanino: transferência da Corte para o Brasil"], ["his9", "HIS", "Brasil Monárquico", "Independência do Brasil e Primeiro Reinado"], ["his10", "HIS", "Brasil Monárquico", "Constituição de 1824"], ["his11", "HIS", "Brasil Monárquico", "Militares: Guarda Nacional e Exército"], ["his12", "HIS", "Brasil Monárquico", "Regências (1831–1840) e revoltas políticas"], ["his13", "HIS", "Brasil Monárquico", "Consolidação da ordem interna e economia cafeeira"], ["his14", "HIS", "Brasil Monárquico", "Modernização: economia e cultura no Império"], ["his15", "HIS", "Brasil Monárquico", "Escravidão e lutas escravas pela liberdade"], ["his16", "HIS", "Brasil Monárquico", "Abolicionismo e abolição da escravatura"], ["his17", "HIS", "Brasil Monárquico", "Trabalho livre e imigração"], ["his18", "HIS", "Brasil Monárquico", "Política externa e Guerra do Paraguai"], ["his19", "HIS", "Brasil Monárquico", "Movimento republicano e advento da República"], ["his20", "HIS", "Brasil Republicano", "Constituição de 1891 e consolidação da República"], ["his21", "HIS", "Brasil Republicano", "Política dos Governadores"], ["his22", "HIS", "Brasil Republicano", "Coronelismo e sistema eleitoral"], ["his23", "HIS", "Brasil Republicano", "Movimento operário"], ["his24", "HIS", "Brasil Republicano", "Tenentismo"], ["his25", "HIS", "Brasil Republicano", "Revolução de 1930"], ["his26", "HIS", "Brasil Republicano", "Período Vargas (1930–1945)"], ["his27", "HIS", "Brasil Republicano", "Estado Novo"], ["his28", "HIS", "Brasil Republicano", "Brasil na II Guerra Mundial e a FEB"], ["his29", "HIS", "Brasil Republicano", "Período democrático (1945–1964)"], ["his30", "HIS", "Brasil Republicano", "Intervenção militar (1964–1985)"], ["his31", "HIS", "Brasil Republicano", "Milagre econômico"], ["his32", "HIS", "Brasil Republicano", "Redemocratização"], ["his33", "HIS", "Brasil Republicano", "Movimentos sociais nas décadas de 1970 e 1980"], ["his34", "HIS", "Brasil Republicano", "Campanha pelas eleições diretas"], ["his35", "HIS", "Brasil Republicano", "Constituição de 1988"], ["his36", "HIS", "Brasil Republicano", "Brasil pós-1985: economia, sociedade e cultura"], ["ped1", "PED", "Cultura e Escola", "ALCÂNTARA — Escola e cultura escolar durante e pós-pandemia"], ["ped2", "PED", "Currículo e Tecnologia", "ALMEIDA; VALENTE — Integração currículo e tecnologias"], ["ped3", "PED", "Cultura e Escola", "BARBOSA — Culturas escolares, de infância e familiares"], ["ped4", "PED", "Metodologias", "BENDER — Aprendizagem baseada em projetos"], ["ped5", "PED", "Avaliação", "BONAMINO; SOUSA — Três gerações de avaliação da educação básica"], ["ped6", "PED", "Cultura e Escola", "BOTO — A liturgia da escola moderna"], ["ped7", "PED", "Currículo e Tecnologia", "COLL; MONEREO — Psicologia da Educação Virtual"], ["ped8", "PED", "Metodologias", "DIAS et al. — Tendências metodológicas em educação matemática"], ["ped9", "PED", "Desenvolvimento", "FONSECA — Desenvolvimento Psicomotor e Aprendizagem"], ["ped10", "PED", "Alfabetização e Letramento", "FRADE; ARAÚJO; GLÓRIA — Multimodalidade na alfabetização"], ["ped11", "PED", "Avaliação", "HOFFMANN — Avaliar para promover"], ["ped12", "PED", "Desenvolvimento", "LA TAILLE; OLIVEIRA; DANTAS — Piaget, Vygotsky, Wallon"], ["ped13", "PED", "Formação Docente", "NÓVOA — Professores: imagens do futuro presente"], ["ped14", "PED", "Gestão Escolar", "PARO — A estrutura didática e administrativa da escola"], ["ped15", "PED", "Cultura e Escola", "PAULILO — A compreensão histórica do fracasso escolar"], ["ped16", "PED", "Currículo e Tecnologia", "PEIXOTO — Tecnologias e relações pedagógicas"], ["ped17", "PED", "Gestão Escolar", "PEREIRA — Políticas de Estado e organização pedagógica"], ["ped18", "PED", "Alfabetização e Letramento", "ROJO — Pedagogia dos Multiletramentos"], ["ped19", "PED", "Inclusão", "ROPOLI — A Educação Especial na Perspectiva da Inclusão"], ["ped20", "PED", "Gestão Escolar", "SANTOS et al. — Gestão democrática e participação social"], ["ped21", "PED", "Alfabetização e Letramento", "SANTOS, Wildson — Educação científica e letramento"], ["ped22", "PED", "Alfabetização e Letramento", "SASSERON; CARVALHO — Alfabetização científica"], ["ped23", "PED", "Currículo e Tecnologia", "SILVA, Roberto — Currículo, conhecimento e transmissão cultural"], ["ped24", "PED", "Currículo e Tecnologia", "SILVA, Tomaz Tadeu — Currículo, conhecimento e democracia"], ["ped25", "PED", "Alfabetização e Letramento", "SOARES — Letramento e alfabetização: as muitas facetas"], ["ped26", "PED", "Formação Docente", "TARDIF — Saberes docentes e formação profissional"], ["ped27", "PED", "Cultura e Escola", "VASCONCELLOS — Indisciplina e disciplina escolar"], ["ped28", "PED", "Gestão Escolar", "VEIGA — Projeto Político-Pedagógico e gestão democrática"], ["ped29", "PED", "Metodologias", "ZABALA — A Prática educativa: como ensinar"], ["leg1", "LEG", "", "Constituição Federal — arts. 205 a 214"], ["leg2", "LEG", "", "ECA — arts. selecionados (Lei 8.069/1990)"], ["leg3", "LEG", "", "LDB — Lei 9.394/1996"], ["leg4", "LEG", "", "DCN Educação Básica — Res. CNE/CEB 04/2010"], ["leg5", "LEG", "", "DCN Ensino Fundamental 9 anos — Res. CNE/CEB 07/2010"], ["leg6", "LEG", "", "Conselhos escolares — democratização e cidadania"], ["leg7", "LEG", "", "Diretrizes para Educação em Direitos Humanos"], ["leg8", "LEG", "", "Diretrizes AEE — Educação Especial (Res. 04/2009)"], ["leg9", "LEG", "", "Política Nacional de Educação Especial Inclusiva"], ["leg10", "LEG", "", "BNCC (2017)"], ["leg11", "LEG", "", "Guia sobre usos de telas por crianças e adolescentes"]];
 const POR_QUESTOES = ["lp1","lp4","lp6","lp7"];
-const CHAVES = {lp1:"napoleao",lp2:"antunes irande",lp3:"bakhtin",lp4:"bechara",lp5:"bncc lp",lp6:"manual redacao",lp7:"aurelio",lp8:"koch elias",lp9:"marcuschi",lp10:"marquesi pauliukonis",lp11:"nilce martins estilistica",lp12:"neves",lp13:"dolz schneuwly",
-  ped2:"valente",ped23:"roberto silva",ped24:"tomaz tadeu",ped20:"gestao democratica santos",ped21:"wildson",ped12:"la taille piaget vygotsky wallon",ped18:"rojo multiletramentos",ped25:"soares letramento",ped29:"zabala",
-  leg1:"cf constituicao 205",leg2:"eca",leg3:"ldb",leg4:"dcn 04/2010 diretrizes basica",leg5:"9 anos 07/2010",leg6:"conselhos escolares",leg7:"direitos humanos",leg8:"aee",leg9:"educacao especial politica inclusiva",leg10:"bncc",leg11:"telas"};
-const AREAS = {
-  PED:{nome:"Pedagogia",cor:"var(--violet)"},
-  LEG:{nome:"Legislação",cor:"var(--pink)"},
-  LP:{nome:"Português",cor:"var(--blue)"},
-  HIS:{nome:"História",cor:"var(--amber)"},
-  GEO:{nome:"Geografia",cor:"var(--mint)"},
-};
+const CHAVES = {lp1:"napoleao",lp2:"antunes",lp3:"bakhtin",lp4:"bechara",lp5:"bncc",lp6:"manual",lp7:"aurelio",lp8:"koch",lp9:"marcuschi",lp10:"marquesi pauliukonis",lp11:"nilce estilistica",lp12:"neves",lp13:"dolz schneuwly",
+  ped2:"valente",ped23:"roberto",ped24:"tomaz",ped20:"gestao democratica",ped21:"wildson",ped12:"la taille piaget vygotsky wallon",ped18:"rojo multiletramentos",ped25:"soares",ped29:"zabala",
+  leg1:"cf constituicao",leg2:"eca",leg3:"ldb",leg4:"04/2010",leg5:"07/2010",leg6:"conselhos",leg7:"direitos humanos",leg8:"aee",leg9:"inclusiva",leg10:"bncc2017",leg11:"telas"};
+const AREAS = {LP:{nome:"Português",cor:"var(--blue)"},PED:{nome:"Pedagogia",cor:"var(--violet)"},LEG:{nome:"Legislação",cor:"var(--pink)"},HIS:{nome:"História",cor:"var(--amber)"},GEO:{nome:"Geografia",cor:"var(--mint)"}};
 const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
-function curtoDe(t){if(!t.includes(" — "))return t.replace(/\s*\(.*$/,"");const au=t.split(" — ")[0];
-  if(au==="BRASIL")return t.split(" — ")[1].split(" (")[0];
-  if(au.includes(";")||au.includes(",")||au.includes("et al")){const ns=au.replace(/ et al\./,"").split(";").map(x=>x.split(",")[0].trim()).map(x=>x.charAt(0)+x.slice(1).toLowerCase());
-    return ns.slice(0,2).join(" & ")+(ns.length>2||au.includes("et al")?" et al.":"");}return au;}
-const TOP = RAW.map(([id,area,g,title])=>({id,area,g:g||AREAS[area].nome,title,modo:POR_QUESTOES.includes(id)?"q":"l",
-  curto:(c=>["PED","LP"].includes(area)&&c===c.toUpperCase()?c.charAt(0)+c.slice(1).toLowerCase():c)(curtoDe(title)),obra:title.includes(" — ")?title.split(" — ").slice(1).join(" — "):"",
+const TOP = RAW.map(([id,area,g,title])=>({id,area,g,title,modo:POR_QUESTOES.includes(id)?"q":"l",
   chaves:norm((CHAVES[id]||"")+" "+title.replace(/\(.*?\)/g," ")).split(/[^a-z0-9/]+/).filter(w=>w.length>=3)}));
 const BYID = Object.fromEntries(TOP.map(t=>[t.id,t]));
+const LEIT = TOP.filter(T=>T.modo==="l");
+const rotulo = T => { const a=T.title.split(" — ")[0].replace(/\s*\(.*$/,""); return a.length>34?a.slice(0,32)+"…":a; };
 
-/* ── ESTADO ── */
-const hoje = () => iso(new Date());
+/* ── datas ── */
 function iso(d){const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10);}
-function addDias(n,base){const d=base?new Date(base+"T12:00"):new Date();d.setDate(d.getDate()+n);return iso(d);}
-function difDias(a,b){return Math.round((new Date(a+"T12:00")-new Date(b+"T12:00"))/864e5);}
-function fmt(d){if(!d)return "—";const [y,m,dd]=d.split("-");return `${dd}/${m}`;}
-function novoEstado(){return {_dono:null,ts:0,prova:"2027-08-01",inicio:hoje(),topicos:{},notas:{},assuntos:{},meta:{PED:4,LEG:2,LP:2,HIS:2,GEO:2},planoMin:false,h2026:null,demo:false};}
-let S;
-try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
-if(!S){S=novoEstado();semearDemo();}
-for(const k of Object.keys(novoEstado())) if(S[k]===undefined) S[k]=novoEstado()[k];
+const hoje=()=>iso(new Date());
+function addDias(n,b){const d=b?new Date(b+"T12:00"):new Date();d.setDate(d.getDate()+n);return iso(d);}
+function dif(a,b){return Math.round((new Date(a+"T12:00")-new Date(b+"T12:00"))/864e5);}
+const fmt=d=>d?d.slice(8,10)+"/"+d.slice(5,7):"—";
 
-function semearDemo(){
-  S.demo=true;
-  const ex=[["ped26",-9,"q",90],["ped26",-2,"e"],["ped6",-6,"q",60],["leg3",-4,"q",80],["lp8",-1,"e"],["his12",-3,"q",70]];
-  ex.forEach(([id,o,t,ac])=>registrar(id,t,ac,"m",addDias(o),true));
-  S.assuntos["crase"]={erros:[addDias(-5)],iv:1,prox:addDias(-4)};
-  S.notas["ped26"]="Exemplo: saberes da formação profissional × disciplinares × curriculares × experienciais.";
-}
-function sairDemo(){if(!S.demo)return;const m=S.meta,p=S.prova,d=S._dono;S=novoEstado();S.meta=m;S.prova=p;S._dono=d;}
-function tp(id){return S.topicos[id]||(S.topicos[id]={reg:[],iv:0,prox:null});}
+/* ── estado ── */
+function novo(){return {ts:0,prova:"2027-08-01",fimLeitura:"2027-03-31",fase:1,revNaLeitura:false,top:{},notas:{},ass:{},h:null,notasImportadas:false};}
+let S; try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
+S=Object.assign(novo(),S||{});
+const R=id=>S.top[id]?.reg||[];
+const reg=id=>(S.top[id]||(S.top[id]={reg:[]})).reg;
+const estudado=id=>R(id).some(r=>r.t==="e");
+function acerto(id){let q=0,a=0;R(id).forEach(r=>{if(r.t==="q"){q+=r.q;a+=r.a;}});return q?{q,a,p:Math.round(a/q*100)}:null;}
+const h26=id=>S.h?.t?.[id];
 
-/* ── REVISÃO ESPAÇADA ── acerto alto alonga o intervalo; acerto baixo volta para perto */
-function proximoIntervalo(iv,tipo,ac){
-  if(tipo==="e") return iv?Math.min(60,Math.round(iv*1.5)):2;
-  if(ac>=85) return Math.min(60,Math.max(4,Math.round(Math.max(iv,2)*2.3)));
-  if(ac>=70) return Math.min(30,Math.max(3,Math.round(Math.max(iv,2)*1.4)));
-  return 1;
-}
-function registrar(id,tipo,ac,fonte,data,silencioso){
-  const t=tp(id);data=data||hoje();
-  t.reg.push(tipo==="q"?{d:data,t:"q",ac,f:fonte||"m"}:{d:data,t:"e"});
-  t.reg.sort((a,b)=>a.d<b.d?-1:1);
-  recalcular(id);
-}
-function recalcular(id){
-  const t=tp(id);let iv=t.base||0,prox=t.baseProx||null;
-  t.reg.forEach(r=>{iv=proximoIntervalo(iv,r.t,r.ac);prox=addDias(iv,r.d);});
-  t.iv=iv;t.prox=prox;
-}
-function status(id){
-  const T=BYID[id];if(T.modo==="q")return {k:"cons",txt:"por questões",ord:900};
-  const t=S.topicos[id];
-  if(!t||!t.prox)return {k:"new",txt:"novo",ord:500};
-  const d=difDias(t.prox,hoje());
-  if(d<0)return {k:"late",txt:`atrasado ${-d}d`,ord:-1000+d};
-  if(d===0)return {k:"due",txt:"revisar hoje",ord:0};
-  return {k:"ok",txt:d===1?"amanhã":`em ${d} dias`,ord:100+d};
-}
-function mediaQ(id,so2027){const q=(S.topicos[id]?.reg||[]).filter(r=>r.t==="q");if(!q.length)return null;return Math.round(q.reduce((s,r)=>s+r.ac,0)/q.length);}
-function ultimo(id){const r=S.topicos[id]?.reg||[];return r[r.length-1];}
-
-/* ── SALVAR / DESFAZER ── */
-let syncT=null;
-function salvar(){S.ts=Date.now();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}clearTimeout(syncT);syncT=setTimeout(subir,700);}
-function mudar(fn,msg){const antes=JSON.stringify(S);fn();salvar();render();if(msg)toast(msg,()=>{S=JSON.parse(antes);salvar();render();});}
-let toastT;
-function toast(msg,desfazer){document.querySelector(".toast")?.remove();clearTimeout(toastT);
-  const el=document.createElement("div");el.className="toast";el.innerHTML=`<span>${msg}</span>`;
-  if(desfazer){const b=document.createElement("button");b.textContent="Desfazer";b.onclick=()=>{desfazer();el.remove();};el.append(b);}
-  document.body.append(el);toastT=setTimeout(()=>el.remove(),desfazer?7000:3500);}
-
-/* ── BARRA DE DIGITAÇÃO ── */
-function acharTopico(txt){
-  const ws=norm(txt).split(/[^a-z0-9/]+/).filter(w=>w.length>=3&&!/^(estudei|revisei|questoes|questao|banca|vunesp|prova|fiz|errei|acertei|sobre|li|reli|resumo)$/.test(w));
-  if(!ws.length)return null;
-  let best=null,bs=0;
-  for(const T of TOP){let s=0;const ex=norm(CHAVES[T.id]||"").split(" ");
-    for(const w of ws){if(ex.includes(w))s+=3;else if(T.chaves.some(c=>c===w))s+=2;else if(w.length>=4&&T.chaves.some(c=>c.startsWith(w)))s+=1;}
-    if(s>bs){bs=s;best=T;}}
-  return bs>=2?best:null;
-}
-function interpretar(frase){
-  return frase.split(/\s*[·;,]\s*|\s+e\s+(?=estudei|errei|fiz|li\b)/i).map(s=>s.trim()).filter(Boolean).map(seg=>{
-    const n=norm(seg);
-    const m=n.match(/^(errei|erro|errou)\s+(.+)$/);
-    if(m){const T=acharTopico(m[2]);if(T&&T.modo!=="q")return {tipo:"q",T,ac:50,fonte:/banca|vunesp|prova/.test(n)?"b":"m",seg};
-      return {tipo:"x",assunto:m[2].replace(/\s+\d+$/,"").trim(),seg};}
-    const fr=n.match(/(\d+)\s*\/\s*(\d+)/),pc=n.match(/(\d{1,3})\s*%/);
-    const T=acharTopico(n.replace(/\d+\s*\/\s*\d+|\d{1,3}\s*%/g," "));
-    if(!T)return {tipo:"?",seg};
-    let ac=null;if(fr&&+fr[2]>0)ac=Math.round(+fr[1]/+fr[2]*100);else if(pc)ac=Math.min(100,+pc[1]);
-    if(ac!==null)return {tipo:"q",T,ac,fonte:/banca|vunesp|prova|esfcex/.test(n)?"b":"m",seg};
-    return {tipo:"e",T,seg};
+/* ── revisão espaçada (vale na fase 2, ou na 1 se ligado em Ajustes) ── */
+function agenda(id){
+  let iv=0,prox=null;
+  R(id).forEach(r=>{
+    if(r.t==="e")iv=iv?Math.min(60,Math.round(iv*1.5)):7;
+    else{const p=r.a/r.q;iv=p>=.85?Math.min(60,Math.round(Math.max(iv,3)*2.3)):p>=.7?Math.min(30,Math.round(Math.max(iv,3)*1.4)):2;}
+    prox=addDias(iv,r.d);
   });
+  return prox;
 }
+const revisando=()=>S.fase===2||S.revNaLeitura;
+function situacao(id){
+  const T=BYID[id];
+  if(T.modo==="q")return {k:"cons",txt:"por questões",o:900};
+  if(!estudado(id))return {k:"new",txt:"não lido",o:500};
+  if(!revisando()){const a=acerto(id);return {k:"ok",txt:a?`${a.p}%`:"lido",o:600};}
+  const d=dif(agenda(id),hoje());
+  if(d<0)return {k:"late",txt:`atrasado ${-d}d`,o:d};
+  if(d===0)return {k:"due",txt:"revisar hoje",o:0};
+  return {k:"ok",txt:d===1?"amanhã":`em ${d}d`,o:100+d};
+}
+
+/* ── ordem da 1ª leitura: intercala matérias, puxa primeiro o que foi mais fraco em 2026 ── */
+const PESO={PED:3,LEG:2,LP:2,HIS:1.5,GEO:1.2};
+function fraqueza(id){const h=h26(id);if(!h)return 50;return (h.ac==null?60:100-h.ac)+(h.n<3?10:0);}
+function fila(n){
+  const feitos={},tot={};LEIT.forEach(T=>{tot[T.area]=(tot[T.area]||0)+1;feitos[T.area]=(feitos[T.area]||0)+(estudado(T.id)?1:0);});
+  const rest=Object.fromEntries(Object.keys(AREAS).map(a=>[a,LEIT.filter(T=>T.area===a&&!estudado(T.id)).sort((x,y)=>fraqueza(y.id)-fraqueza(x.id))]));
+  const out=[];
+  while(out.length<n){
+    let best=null,bv=1e9;
+    for(const a in rest){if(!rest[a].length)continue;const v=feitos[a]/tot[a]/PESO[a];if(v<bv){bv=v;best=a;}}
+    if(!best)break;out.push(rest[best].shift());feitos[best]++;
+  }
+  return out;
+}
+
+/* ── salvar: aparelho + nuvem, sem login ── */
+let fb=null,syncT=null;
+function setSync(t,err){const e=document.getElementById("sync");e.textContent=t;e.classList.toggle("err",!!err);}
+function salvar(){S.ts=Date.now();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}clearTimeout(syncT);setSync("salvando…");syncT=setTimeout(subir,700);}
+const prazo=(p,ms=10000)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("prazo")),ms))]);
+async function nuvem(){
+  if(fb)return fb;
+  const [A,F]=await Promise.all(["app","firestore"].map(m=>import(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-${m}.js`)));
+  const app=A.initializeApp(FB_CFG,"estudos2027");fb={F,db:F.getFirestore(app)};return fb;
+}
+async function subir(){try{const f=await prazo(nuvem());await prazo(f.F.setDoc(f.F.doc(f.db,...DOC_2027),JSON.parse(JSON.stringify(S))));setSync("salvo");}catch(e){setSync("sem internet · salvo no aparelho",true);}}
+async function baixar(){
+  try{
+    const f=await prazo(nuvem());
+    const sn=await prazo(f.F.getDoc(f.F.doc(f.db,...DOC_2027)));
+    if(sn.exists()&&(sn.data().ts||0)>(S.ts||0)){S=Object.assign(novo(),sn.data());try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+    else if(S.ts&&!sn.exists())subir();
+    if(!S.h){const v=await prazo(f.F.getDoc(f.F.doc(f.db,...DOC_2026)));if(v.exists()){resumir2026(v.data());salvar();}}
+    setSync("salvo");render();
+  }catch(e){setSync("sem internet · salvo no aparelho",true);}
+}
+/* lê 2026 sem alterar nada lá: vira um resumo usado para ordem, comparação e anotações */
+function isoV(d){if(!d)return null;return d.includes("/")?d.split("/").reverse().join("-"):d.slice(0,10);}
+function resumir2026(D){
+  const H={t:{},dias:[],vistosPorDia:[],qArea:{},revs:0};const prim={};const dias=new Set();
+  Object.entries(D.state||{}).forEach(([id,s])=>{const E=s.entries||[];if(!E.length||!BYID[id])return;
+    const qs=E.filter(e=>e.tipo==="questoes"&&e.acerto!=null).map(e=>+e.acerto);
+    H.t[id]={n:E.length,ac:qs.length?Math.round(qs.reduce((a,b)=>a+b,0)/qs.length):null,acs:qs};
+    H.revs+=E.length;H.qArea[BYID[id].area]=(H.qArea[BYID[id].area]||0)+qs.length;
+    E.forEach(e=>{const d=isoV(e.date);if(d){dias.add(d);if(!prim[id]||d<prim[id])prim[id]=d;}});});
+  H.dias=[...dias].sort();
+  H.vistosPorDia=H.dias.map(d=>Object.values(prim).filter(p=>p<=d).length);
+  S.h=H;
+  if(!S.notasImportadas){Object.entries(D.notes||{}).forEach(([id,n])=>{if(n&&!S.notas[id])S.notas[id]=n;});S.notasImportadas=true;}
+}
+
+/* ── desfazer ── */
+let toastT;
+function toast(msg,desf,ms){document.querySelector(".toast")?.remove();clearTimeout(toastT);
+  const el=document.createElement("div");el.className="toast";el.innerHTML=`<span>${msg}</span>`;
+  if(desf){const b=document.createElement("button");b.textContent="Desfazer";b.onclick=()=>{desf();el.remove();};el.append(b);}
+  document.body.append(el);toastT=setTimeout(()=>el.remove(),ms||(desf?7000:3500));}
+function mudar(fn,msg){const antes=JSON.stringify(S);const extra=fn();salvar();render();
+  if(msg!==null)toast(extra||msg||"Feito",()=>{S=JSON.parse(antes);salvar();render();});}
+
+/* ── momentos 2026 ── */
+function cmp2026(id,p){const h=h26(id);if(!h||h.ac==null)return "";const d=p-h.ac;
+  return d>=5?` · ${d} pts acima de 2026 💪`:d<=-5?` · ${-d} pts abaixo de 2026 ⚠️`:" · mesmo nível de 2026";}
+function marcoQuestoes(area){const h=S.h?.qArea?.[area];if(!h)return "";
+  const n=LEIT.concat(TOP).filter((T,i,a)=>a.indexOf(T)===i&&T.area===area).reduce((s,T)=>s+R(T.id).filter(r=>r.t==="q").length,0);
+  return n===h+1?` · já são mais blocos de questões de ${AREAS[area].nome} que em 2026 inteiro 🏅`:"";}
+function diasEstudo(){const s=new Set();Object.values(S.top).forEach(t=>t.reg.forEach(r=>s.add(r.d)));return [...s].sort();}
+function ritmo2026(){const H=S.h;if(!H)return "";const d=diasEstudo().length,n=H.dias.length;
+  if(!d)return `Em 2026 foram ${n} dias de estudo. Esta temporada começa hoje.`;
+  return d>n?`Já são ${d} dias de estudo — mais que os ${n} de 2026 inteiro 🏅`:`${d} dias de estudo nesta temporada · 2026 inteiro teve ${n}.`;}
+
+/* ── lançar ── */
+function registrar(id,r){const L=reg(id);L.push(Object.assign({d:hoje()},r));
+  if(S.fase===1&&LEIT.every(T=>estudado(T.id))){S.fase=2;return "1ª leitura completa! 🎉 Começam as revisões.";}
+  if(r.t==="q"){const p=Math.round(r.a/r.q*100);return `${rotulo(BYID[id])}: ${r.a}/${r.q} (${p}%)${cmp2026(id,p)}${marcoQuestoes(BYID[id].area)}`;}
+  return `Estudado: ${rotulo(BYID[id])}`;}
+function acharTopico(txt){
+  const ws=norm(txt).split(/[^a-z0-9/]+/).filter(w=>w.length>=3&&!/^(estudei|revisei|questoes|questao|fiz|errei|acertei|li|reli|li)$/.test(w));
+  if(!ws.length)return null;let best=null,bs=0;
+  for(const T of TOP){let s=0;const ex=norm(CHAVES[T.id]||"").split(" ");
+    for(const w of ws){if(ex.includes(w))s+=3;else if(T.chaves.includes(w))s+=2;else if(w.length>=4&&T.chaves.some(c=>c.startsWith(w)))s+=1;}
+    if(s>bs){bs=s;best=T;}}
+  return bs>=2?best:null;}
+function interpretar(f){
+  return f.split(/\s*[·;,]\s*/).map(s=>s.trim()).filter(Boolean).map(seg=>{const n=norm(seg);
+    const m=n.match(/^(errei|erro)\s+(.+)$/);if(m)return {k:"x",ass:m[2].trim(),seg};
+    const fr=n.match(/(\d+)\s*\/\s*(\d+)/);const T=acharTopico(n.replace(/\d+\s*\/\s*\d+/g," "));
+    if(!T)return {k:"?",seg};
+    if(fr&&+fr[2]>0)return {k:"q",T,a:Math.min(+fr[1],+fr[2]),q:+fr[2],seg};
+    return {k:"e",T,seg};});}
 const qIn=document.getElementById("q"),qGo=document.getElementById("qGo"),pills=document.getElementById("pills");
-function previa(){
-  const v=qIn.value.trim();if(!v){pills.innerHTML="";qGo.disabled=true;return;}
-  const it=interpretar(v);qGo.disabled=!it.some(i=>i.tipo!=="?");
-  pills.innerHTML=it.map(i=>i.tipo==="q"?`<span class="pill q">✏️ ${i.T.curto} · ${i.ac}%${i.fonte==="b"?" · banca":""}</span>`
-    :i.tipo==="e"?`<span class="pill e">📖 estudei ${i.T.curto}</span>`
-    :i.tipo==="x"?`<span class="pill x">✕ errei ${i.assunto}</span>`
-    :`<span class="pill bad">? não entendi “${i.seg}”</span>`).join("");
-}
-function lancar(){
-  const it=interpretar(qIn.value.trim()).filter(i=>i.tipo!=="?");if(!it.length)return;
-  mudar(()=>{sairDemo();it.forEach(i=>{
-    if(i.tipo==="x"){const k=norm(i.assunto);const a=S.assuntos[k]||(S.assuntos[k]={erros:[],iv:0,prox:null});a.erros.push(hoje());a.iv=1;a.prox=addDias(1);}
-    else registrar(i.T.id,i.tipo,i.ac,i.fonte);
-  });},it.length===1?"Lançado":`${it.length} lançamentos`);
-  qIn.value="";previa();
-}
-qIn.addEventListener("input",previa);
-qIn.addEventListener("keydown",e=>{if(e.key==="Enter")lancar();});
-qGo.onclick=lancar;
+function previa(){const v=qIn.value.trim();if(!v){pills.innerHTML="";qGo.disabled=true;return;}
+  const it=interpretar(v);qGo.disabled=!it.some(i=>i.k!=="?");
+  pills.innerHTML=it.map(i=>i.k==="q"?`<span class="pill q">✏️ ${rotulo(i.T)} · ${i.a}/${i.q}</span>`:i.k==="e"?`<span class="pill e">📖 ${rotulo(i.T)}</span>`:i.k==="x"?`<span class="pill x">✕ errei ${i.ass}</span>`:`<span class="pill bad">? “${i.seg}”</span>`).join("");}
+function lancar(){const it=interpretar(qIn.value.trim()).filter(i=>i.k!=="?");if(!it.length)return;
+  mudar(()=>{let m;it.forEach(i=>{if(i.k==="x")m=errei(i.ass);else m=registrar(i.T.id,i.k==="q"?{t:"q",q:i.q,a:i.a}:{t:"e"});});return it.length>1?`${it.length} lançamentos`:m;});
+  qIn.value="";previa();qIn.blur();}
+function errei(ass){const k=norm(ass);const a=S.ass[k]||(S.ass[k]={erros:[],iv:0,prox:null});a.erros.push(hoje());a.iv=1;a.prox=addDias(1);return `Errou ${k}: volta amanhã`;}
+qIn.addEventListener("input",previa);qIn.addEventListener("keydown",e=>{if(e.key==="Enter")lancar();});qGo.onclick=lancar;
 
-/* ── TELAS ── */
-let aba="hoje",areaSel="PED";
-const ABAS=[["hoje","Hoje"],["materias","Matérias"],["gramatica","Gramática"],["ajustes","Ajustes"]];
-function renderTabs(){
-  const n=TOP.filter(T=>["late","due"].includes(status(T.id).k)).length+Object.values(S.assuntos).filter(a=>a.prox&&a.prox<=hoje()).length;
-  document.getElementById("tabs").innerHTML=ABAS.map(([k,l])=>`<button class="tab" role="tab" aria-selected="${aba===k}" data-aba="${k}">${l}${k==="hoje"&&n?`<b>${n}</b>`:""}</button>`).join("");
-}
-document.getElementById("tabs").onclick=e=>{const b=e.target.closest("[data-aba]");if(!b)return;aba=b.dataset.aba;render();window.scrollTo(0,0);};
-
+/* ── telas ── */
+let aba="hoje";
 function render(){
-  const y=window.scrollY,foco=document.activeElement?.id;
-  renderTabs();
-  const M=document.getElementById("main");
-  M.innerHTML=({hoje:telaHoje,materias:telaMaterias,gramatica:telaGramatica,ajustes:telaAjustes})[aba]();
-  window.scrollTo(0,y);if(foco)document.getElementById(foco)?.focus();
+  const y=scrollY;
+  const pend=revisando()?LEIT.filter(T=>["late","due"].includes(situacao(T.id).k)).length:0;
+  document.getElementById("tabs").innerHTML=[["hoje","Hoje"],...Object.entries(AREAS).map(([a,A])=>[a,A.nome]),["cfg","⚙"]]
+    .map(([k,l])=>`<button class="tab${k==="cfg"?" cfg":""}" role="tab" aria-selected="${aba===k}" data-aba="${k}">${l}${k==="hoje"&&pend?`<b>${pend}</b>`:""}</button>`).join("");
+  document.getElementById("main").innerHTML=aba==="hoje"?telaHoje():aba==="cfg"?telaCfg():telaArea(aba);
+  scrollTo(0,y);
 }
+document.getElementById("tabs").onclick=e=>{const b=e.target.closest("[data-aba]");if(!b)return;aba=b.dataset.aba;render();scrollTo(0,0);b.scrollIntoView({inline:"center",block:"nearest"});};
 
-function semanaIni(){const d=new Date();const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);return iso(d);}
-function feitosSemana(area){const ini=semanaIni();let n=0;TOP.forEach(T=>{if(T.area!==area)return;(S.topicos[T.id]?.reg||[]).forEach(r=>{if(r.d>=ini)n++;});});return n;}
-function sequencia(){const dias=new Set();Object.values(S.topicos).forEach(t=>t.reg.forEach(r=>dias.add(r.d)));Object.values(S.assuntos).forEach(a=>a.erros.forEach(d=>dias.add(d)));
-  let n=0,d=hoje();if(!dias.has(d))d=addDias(-1);while(dias.has(d)){n++;d=addDias(-1,d);}return n;}
-
-function linhaTopico(T,botao){
-  const s=status(T.id),m=mediaQ(T.id),u=ultimo(T.id),h=S.h2026?.t?.[T.id];
-  const sub=[T.obra||T.g,u?`último ${fmt(u.d)}`:null,m!=null?`${m}%`:null,h&&!u?`2026: ${h.n}× ${h.ac!=null?h.ac+"%":""}`:null].filter(Boolean).join(" · ");
-  return `<div class="item clk" data-top="${T.id}"><span class="dot" style="background:${AREAS[T.area].cor}"></span>
-   <div class="tx"><div class="t1">${T.curto}</div><div class="t2">${sub}</div></div>
-   ${botao?`<button class="mini go" data-feito="${T.id}" aria-label="Revisei">✓</button>`:`<span class="tag ${s.k}">${s.txt}</span>`}</div>`;
+function linha(T,acaoLi){
+  const s=situacao(T.id),a=acerto(T.id),h=h26(T.id),u=R(T.id).at(-1);
+  const sub=[u?`último ${fmt(u.d)}`:null,a?`${a.a}/${a.q} questões`:null,h?`2026: ${h.n}×${h.ac!=null?" · "+h.ac+"%":""}`:null].filter(Boolean).join(" · ");
+  const dir=acaoLi&&!estudado(T.id)?`<button class="mini go" data-li="${T.id}" aria-label="Marcar como estudado">✓</button>`:`<span class="tag ${s.k}">${s.txt}</span>`;
+  return `<div class="item clk" data-top="${T.id}"><span class="dot" style="background:${AREAS[T.area].cor}"></span><div class="tx"><div class="t1 full">${T.title}</div>${sub?`<div class="t2">${sub}</div>`:""}</div>${dir}</div>`;
 }
 
 function telaHoje(){
-  const dias=Math.max(0,difDias(S.prova,hoje()));
-  const leit=TOP.filter(T=>T.modo==="l");
-  const vistos=leit.filter(T=>S.topicos[T.id]?.reg?.length).length;
-  const atras=leit.filter(T=>status(T.id).k==="late").length;
-  let h=`<div class="hero"><div class="lbl">Prova EsFCEx</div><div class="big num">${dias}<small> dias</small></div>
-    <div style="font-size:13px;opacity:.9">${fmtLongo(S.prova)} · toque em Ajustes para mudar a data</div>
-    <div class="row"><div><b>${vistos}/${leit.length}</b><span>do edital visto</span></div><div><b>${atras}</b><span>atrasados</span></div><div><b>${sequencia()}</b><span>dias seguidos</span></div></div></div>`;
-  if(S.demo)h+=`<div class="banner">Estes são dados de exemplo.<button data-acao="importar">Trazer meu 2026</button></div>`;
-  else if(!S.h2026&&!Object.values(S.topicos).some(t=>t.reg.length>3))h+=`<div class="banner">Começar a temporada com o que você já estudou em 2026?<button data-acao="importar">Importar</button></div>`;
+  const dias=Math.max(0,dif(S.prova,hoje()));
+  const lidos=LEIT.filter(T=>estudado(T.id)).length,falta=LEIT.length-lidos;
+  const sem=Math.max(1,dif(S.fimLeitura,hoje())/7);const porSem=Math.ceil(falta/sem);
+  let h=`<div class="hero">
+    <span class="fase">${S.fase===1?"Fase 1 · leitura de tudo":"Fase 2 · revisões"}</span>
+    <div class="big num">${dias}<small> dias para a prova</small></div>
+    <div style="font-size:13.5px;opacity:.92;margin-top:6px">${S.fase===1?`${lidos} de ${LEIT.length} lidos · ${falta?`${porSem} por semana até ${fmt(S.fimLeitura)}`:"leitura completa"}`:`${LEIT.filter(T=>situacao(T.id).k==="ok").length} tópicos em dia`}</div>
+    ${S.h?`<div style="font-size:12.5px;opacity:.85;margin-top:8px">${ritmo2026()}</div>`:""}
+  </div>`;
 
-  // revisar hoje
-  const fila=leit.map(T=>({T,s:status(T.id)})).filter(x=>x.s.k==="late"||x.s.k==="due").sort((a,b)=>a.s.ord-b.s.ord);
-  const ass=Object.entries(S.assuntos).filter(([k,a])=>a.prox&&a.prox<=hoje());
-  h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Revisar hoje</h3><span class="sub num">${fila.length+ass.length}</span></div>`;
-  if(!fila.length&&!ass.length)h+=`<div class="empty">Nada vencendo hoje. Puxe um tópico novo do plano abaixo. 🎉</div>`;
-  h+=fila.slice(0,8).map(x=>linhaTopico(x.T,false)).join("");
-  if(fila.length>8)h+=`<div class="pb" style="padding-top:10px"><button class="btn-line" data-aba-ir="materias">+${fila.length-8} na aba Matérias</button></div>`;
-  h+=ass.map(([k,a])=>`<div class="item"><span class="dot" style="background:var(--tang)"></span><div class="tx"><div class="t1">${k}</div><div class="t2">Gramática · errou ${a.erros.length}×</div></div><button class="mini go" data-assok="${k}">Revisei</button></div>`).join("");
-  h+=`</div>`;
+  if(S.fase===1){
+    h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>A seguir</h3><span class="sub">toque ✓ quando terminar</span></div>`+fila(4).map(T=>linha(T,true)).join("")+`</div>`;
+  }
+  if(revisando()){
+    const due=LEIT.map(T=>({T,s:situacao(T.id)})).filter(x=>["late","due"].includes(x.s.k)).sort((a,b)=>a.s.o-b.s.o);
+    h+=`<div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Revisar hoje</h3><span class="sub num">${due.length}</span></div>`+
+      (due.length?due.slice(0,6).map(x=>linha(x.T)).join("")+(due.length>6?`<div class="empty" style="padding:10px">+${due.length-6} depois desses</div>`:""):`<div class="empty">Tudo em dia.</div>`)+`</div>`;
+  }
+  const ass=Object.entries(S.ass).filter(([k,a])=>a.prox&&a.prox<=hoje());
+  if(ass.length)h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Gramática para rever</h3></div>`+ass.map(([k,a])=>linhaAss(k,a)).join("")+`</div>`;
 
-  // plano da semana
-  const ritmo=((new Date().getDay()+6)%7+1)/7;
-  h+=`<div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Plano da semana</h3><span class="sub">revisões por matéria</span><button class="act" data-acao="plano">${S.planoMin?"Abrir":"Recolher"}</button></div>`;
-  if(!S.planoMin){h+=`<div class="pb">`+Object.entries(AREAS).map(([a,A])=>{const f=feitosSemana(a),m=S.meta[a]||0,p=m?Math.min(1,f/m):0;
-    return `<div class="plan-row"><div class="nm"><i style="background:${A.cor}"></i>${A.nome}</div><div class="bar"><span style="width:${p*100}%;background:${A.cor}"></span><em style="left:${ritmo*100}%"></em></div>
-    <div class="stepper"><button data-meta="${a}" data-d="-1">−</button><span>${f}/${m}</span><button data-meta="${a}" data-d="1">+</button></div></div>`;}).join("")+`</div>`;
-  // próximos novos
-  const novos=Object.keys(AREAS).map(a=>({a,falta:(S.meta[a]||0)-feitosSemana(a),T:leit.find(T=>T.area===a&&status(T.id).k==="new")})).filter(x=>x.falta>0&&x.T);
-  if(novos.length)h+=`<div class="grp">Sugestão para começar</div>`+novos.slice(0,3).map(x=>linhaTopico(x.T,false)).join("");}
-  h+=`</div>`;
-  if(S.h2026)h+=trofeu2026();
+  // solidez frente a 2026: só aparece quando já há base para comparar
+  const cmp=LEIT.map(T=>{const a=acerto(T.id),hh=h26(T.id);return a&&hh&&hh.ac!=null?a.p-hh.ac:null;}).filter(x=>x!=null);
+  if(cmp.length>=3){const up=cmp.filter(d=>d>=5).length,eq=cmp.filter(d=>d>-5&&d<5).length,dn=cmp.filter(d=>d<=-5).length;
+    h+=`<div class="panel" style="--hc:var(--mint)"><div class="panel-h"><h3>Solidez frente a 2026</h3><span class="sub">${cmp.length} tópicos com questões</span></div><div class="pb"><div class="solid3">
+    <div style="background:var(--mint-soft)"><b>${up}</b><span>mais sólidos</span></div><div style="background:var(--sunk)"><b>${eq}</b><span>iguais</span></div><div style="background:var(--danger-soft)"><b>${dn}</b><span>mais frágeis</span></div></div></div></div>`;}
   return h;
 }
-function fmtLongo(d){return new Date(d+"T12:00").toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"});}
-function trofeu2026(){const H=S.h2026;
-  return `<div class="panel trophy" style="--hc:var(--amber)"><div class="panel-h"><h3>🏆 Temporada 2026</h3><span class="sub">${fmt(H.ini)} a ${fmt(H.fim)}</span></div><div class="pb"><div class="g">
-  <div><b>${H.revs}</b><span>revisões</span></div><div><b>${H.dias}</b><span>dias estudando</span></div>
-  <div><b>${H.q}</b><span>blocos de questões</span></div><div><b>${H.fech}</b><span>tópicos fechados</span></div></div></div></div>`;}
+function linhaAss(k,a){const d=a.prox?dif(a.prox,hoje()):null;
+  return `<div class="item"><span class="dot" style="background:var(--tang)"></span><div class="tx"><div class="t1">${k}</div><div class="t2">errou ${a.erros.length}× · ${d==null?"dominado":d<=0?"rever hoje":"volta em "+d+"d"}</div></div>
+  <button class="mini" data-assok="${k}" aria-label="Revisei">✓</button><button class="mini" data-assdel="${k}" aria-label="Apagar">✕</button></div>`;}
 
-function telaMaterias(){
-  let h=`<div class="chips">`+Object.entries(AREAS).map(([a,A])=>{const n=TOP.filter(T=>T.area===a&&["late","due"].includes(status(T.id).k)).length;
-    return `<button class="chip" aria-pressed="${areaSel===a}" data-area="${a}">${A.nome}${n?` · ${n}`:""}</button>`;}).join("")+`</div>`;
-  const ts=TOP.filter(T=>T.area===areaSel);const leit=ts.filter(T=>T.modo==="l");
-  const vistos=leit.filter(T=>S.topicos[T.id]?.reg?.length).length;
-  h+=`<div class="panel" style="--hc:${AREAS[areaSel].cor}"><div class="panel-h"><h3>${AREAS[areaSel].nome}</h3><span class="sub num">${vistos}/${leit.length} vistos</span></div>`;
-  const grupos=[...new Set(leit.map(T=>T.g))];
-  grupos.forEach(g=>{const l=leit.filter(T=>T.g===g).sort((a,b)=>status(a.id).ord-status(b.id).ord);
-    if(grupos.length>1)h+=`<div class="grp">${g}</div>`;h+=l.map(T=>linhaTopico(T)).join("");});
-  const cons=ts.filter(T=>T.modo==="q");
-  if(cons.length)h+=`<div class="grp">Gramática e consulta · estudo por questões</div>`+cons.map(T=>linhaTopico(T)).join("");
+function telaArea(a){
+  const ts=TOP.filter(T=>T.area===a),l=ts.filter(T=>T.modo==="l"),lidos=l.filter(T=>estudado(T.id)).length;
+  let h=`<div class="panel" style="--hc:${AREAS[a].cor}"><div class="panel-h"><h3>${AREAS[a].nome}</h3><span class="sub num" style="margin-left:auto">${lidos}/${l.length} lidos</span></div>
+   <div class="pb"><div class="bar"><span style="width:${lidos/l.length*100}%;background:${AREAS[a].cor}"></span></div></div>`;
+  const gs=[...new Set(l.map(T=>T.g))];
+  gs.forEach(g=>{if(g)h+=`<div class="grp">${g}</div>`;h+=l.filter(T=>T.g===g).map(T=>linha(T,S.fase===1)).join("");});
+  if(a==="LP"){
+    const L=Object.entries(S.ass);
+    h+=`<div class="grp">Gramática · estudo por questões</div>`+ts.filter(T=>T.modo==="q").map(T=>linha(T)).join("")+
+      (L.length?L.map(([k,x])=>linhaAss(k,x)).join(""):`<div class="empty" style="padding:12px">Lance erros escrevendo “errei regência” na barra de cima.</div>`);
+  }
   return h+`</div>`;
 }
 
-function telaGramatica(){
-  const L=Object.entries(S.assuntos).sort((a,b)=>(a[1].prox||"9")<(b[1].prox||"9")?-1:1);
-  let h=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Assuntos que você errou</h3></div>
-  <div class="pb" style="font-size:13.5px;color:var(--muted)">Aqui não tem plano de leitura. Faça questões e escreva <b>errei regência</b> na barra de cima: o assunto volta amanhã, depois em 3, 7, 15 dias. Se não errar mais, some.</div>`;
-  if(!L.length)h+=`<div class="empty">Nenhum erro lançado ainda.</div>`;
-  h+=L.map(([k,a])=>{const d=a.prox?difDias(a.prox,hoje()):null;const tg=d==null?`<span class="tag ok">dominado</span>`:d<=0?`<span class="tag ${d<0?"late":"due"}">${d<0?`atrasado ${-d}d`:"hoje"}</span>`:`<span class="tag ok">em ${d}d</span>`;
-    return `<div class="item"><span class="dot" style="background:var(--tang)"></span><div class="tx"><div class="t1">${k}</div><div class="t2">errou ${a.erros.length}× · último erro ${fmt(a.erros[a.erros.length-1])}</div></div>${tg}
-    <button class="mini" data-assok="${k}" aria-label="Revisei">✓</button><button class="mini" data-assdel="${k}" aria-label="Apagar">✕</button></div>`;}).join("");
-  h+=`</div><div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Obras de consulta</h3></div>`+TOP.filter(T=>T.modo==="q").map(T=>linhaTopico(T)).join("")+`</div>`;
-  return h;
+function telaCfg(){
+  const H=S.h;
+  return `<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Datas</h3></div><div class="pb">
+    <div class="field"><label class="sub">Prova (ajuste quando sair o edital)</label><input type="date" data-cfg="prova" value="${S.prova}"></div>
+    <div class="field"><label class="sub">Terminar a 1ª leitura até</label><input type="date" data-cfg="fimLeitura" value="${S.fimLeitura}"></div></div></div>
+  <div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Fase</h3></div><div class="pb">
+    <label class="sw"><input type="checkbox" data-cfg="revNaLeitura" ${S.revNaLeitura?"checked":""}> Mostrar revisões já durante a 1ª leitura</label>
+    <button class="btn" data-acao="fase">${S.fase===1?"Começar a fase de revisões agora":"Voltar para a 1ª leitura"}</button></div></div>
+  ${H?`<div class="panel trophy" style="--hc:var(--amber)"><div class="panel-h"><h3>Temporada 2026</h3><span class="sub">guardada, só leitura</span></div><div class="pb"><div class="g">
+    <div><b>${H.revs}</b><span>revisões</span></div><div><b>${H.dias.length}</b><span>dias de estudo</span></div>
+    <div><b>${Object.values(H.qArea).reduce((a,b)=>a+b,0)}</b><span>blocos de questões</span></div><div><b>${Object.keys(H.t).length}</b><span>tópicos vistos</span></div></div>
+    <a class="btn-line" style="margin-top:10px" href="2026.html">Abrir o site de 2026</a></div></div>`:""}
+  <div class="panel" style="--hc:var(--mint)"><div class="panel-h"><h3>Mais</h3></div><div class="pb" style="display:grid;gap:8px">
+    <button class="btn" data-acao="backup">Baixar cópia de segurança</button>
+    <button class="btn" data-acao="instalar">Instalar como app</button>
+    <div class="sub" style="text-align:center">Salva sozinho no aparelho e na nuvem · versão ${VERSAO}</div></div></div>`;
 }
 
-function telaAjustes(){
-  return `<div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Conta</h3></div><div class="pb" id="contaBox">${contaHTML()}</div></div>
-  <div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Prova</h3></div><div class="pb">
-   <div class="field"><label class="sub">Data da prova (ajuste quando sair o edital)</label><input type="date" id="dtProva" value="${S.prova}"></div></div></div>
-  <div class="panel" style="--hc:var(--amber)"><div class="panel-h"><h3>Temporada 2026</h3></div><div class="pb" style="display:grid;gap:8px">
-   <div class="sub" style="margin-bottom:4px">Traz suas revisões e anotações do site antigo. Os tópicos que você já dominava começam com revisão mais espaçada; os fracos voltam logo.</div>
-   <button class="btn solid" data-acao="importar">Importar do site de 2026</button>
-   <button class="btn" data-acao="arquivo">Importar arquivo de backup (.json)</button>
-   <a class="btn-line" href="2026.html">Abrir o site de 2026</a>
-   <input type="file" id="arq" accept=".json" hidden></div></div>
-  <div class="panel" style="--hc:var(--mint)"><div class="panel-h"><h3>Dados</h3></div><div class="pb" style="display:grid;gap:8px">
-   <button class="btn" data-acao="exportar">Baixar backup</button>
-   <button class="btn" data-acao="instalar">Instalar como app</button>
-   <button class="btn-line" data-acao="zerar">Começar do zero</button>
-   <div class="sub" style="text-align:center;margin-top:6px">Versão ${VERSAO}</div></div></div>`;
-}
-
-/* ── FOLHA DO TÓPICO ── */
+/* ── folha do tópico ── */
 function abrirFolha(html){const L=document.getElementById("layer");L.querySelector(".sheet").innerHTML=`<div class="grab"></div><button class="ico x" data-fechar>✕</button>`+html;L.classList.add("on");}
 function fecharFolha(){document.getElementById("layer").classList.remove("on");}
 document.querySelector("#layer .back").onclick=fecharFolha;
-let fonteSel="m";
-function folhaTopico(id){
-  const T=BYID[id],t=S.topicos[id],s=status(id),h=S.h2026?.t?.[id];
-  const reg=(t?.reg||[]).slice().reverse();
-  abrirFolha(`<h2>${T.curto}</h2><div class="meta">${T.obra||T.title} · <span class="tag ${s.k}">${s.txt}</span>${h?` · 2026: ${h.n} revisões${h.ac!=null?`, ${h.ac}%`:""}`:""}</div>
-   ${T.modo==="q"?`<div class="banner" style="background:var(--violet-soft)">Obra de consulta: estude por questões e lance os erros por assunto na aba Gramática.</div>`:""}
-   <div class="lab">Fiz questões — acerto</div>
-   <div class="seg" style="margin-bottom:8px"><button data-fonte="m" aria-pressed="${fonteSel==="m"}">Meus simulados</button><button data-fonte="b" aria-pressed="${fonteSel==="b"}">Prova real / banca</button></div>
-   <div class="pct-grid">${[40,50,60,70,80,90].map(p=>`<button data-reg="${id}" data-ac="${p}">${p}</button>`).join("")}</div>
-   <div class="two" style="margin-top:8px"><button class="btn" data-reg="${id}" data-ac="100">100%</button><button class="btn tang" data-reg="${id}" data-tipo="e">📖 Estudei</button></div>
-   <div class="lab">Anotações</div>
-   <textarea class="note" id="nota" data-nota="${id}" placeholder="O que cai, distinções, pegadinhas…">${esc(S.notas[id]||"")}</textarea>
-   <div class="lab">Histórico</div>
-   ${reg.length?reg.map((r,i)=>`<div class="hist"><span class="d">${fmt(r.d)}</span><span class="k">${r.t==="q"?`✏️ ${r.ac}%${r.f==="b"?" · banca":""}`:"📖 estudo"}</span><button data-del="${id}" data-i="${reg.length-1-i}" aria-label="Apagar">✕</button></div>`).join(""):`<div class="sub">Nada na temporada 2027 ainda.</div>`}
-   ${t?.prox?`<div class="sub" style="margin-top:10px">Próxima revisão: ${fmt(t.prox)} (intervalo de ${t.iv} dias)</div>`:""}`);
+let nq=10,na=8;
+function folha(id){
+  const T=BYID[id],h=h26(id),a=acerto(id),L=R(id).slice().reverse();
+  abrirFolha(`<h2>${T.title}</h2><div class="meta">${AREAS[T.area].nome}${T.g?" · "+T.g:""}</div>
+  ${h?`<div class="cmp">2026: ${h.n} revisões${h.ac!=null?` · média ${h.ac}%`:""}${a&&h.ac!=null?` · agora ${a.p}%`:""}</div>`:""}
+  ${T.modo==="l"?`<button class="btn tang" data-li="${id}">📖 ${estudado(id)?"Estudei de novo":"Estudei"}</button>`:`<div class="cmp">Obra de consulta: estude por questões e lance os erros por assunto.</div>`}
+  <div class="lab">Questões</div>
+  <div class="nrow">
+    <div class="nbox"><label>Fiz</label><div><button data-n="q" data-d="-1">−</button><input id="nq" type="number" inputmode="numeric" value="${nq}"><button data-n="q" data-d="1">+</button></div></div>
+    <div class="nbox"><label>Acertei</label><div><button data-n="a" data-d="-1">−</button><input id="na" type="number" inputmode="numeric" value="${na}"><button data-n="a" data-d="1">+</button></div></div>
+  </div>
+  <button class="btn solid" style="margin-top:8px" data-salvarq="${id}">Salvar questões</button>
+  <div class="lab">Anotações</div>
+  <textarea class="note" data-nota="${id}" placeholder="Distinções, pegadinhas…">${esc(S.notas[id]||"")}</textarea>
+  ${L.length?`<div class="lab">Histórico 2027</div>`+L.map((r,i)=>`<div class="hist"><span class="d">${fmt(r.d)}</span><span class="k">${r.t==="q"?`✏️ ${r.a}/${r.q}`:"📖 estudo"}</span><button data-del="${id}" data-i="${L.length-1-i}" aria-label="Apagar">✕</button></div>`).join(""):""}`);
 }
-function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);}
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
 
-/* ── CLIQUES ── */
+/* ── cliques ── */
 document.addEventListener("click",e=>{
   const g=k=>e.target.closest(`[data-${k}]`);let b;
-  if(b=g("fechar"))return fecharFolha();
-  if(b=g("feito")){e.stopPropagation();return folhaTopico(b.dataset.feito);}
-  if(b=g("reg")){const id=b.dataset.reg;const tipo=b.dataset.tipo||"q";const ac=+b.dataset.ac;
-    mudar(()=>{sairDemo();registrar(id,tipo,ac,fonteSel);},tipo==="e"?`Estudo registrado · ${BYID[id].curto}`:`${ac}% registrado · ${BYID[id].curto}`);folhaTopico(id);return;}
-  if(b=g("fonte")){fonteSel=b.dataset.fonte;b.parentNode.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));return;}
-  if(b=g("del")){const id=b.dataset.del;mudar(()=>{S.topicos[id].reg.splice(+b.dataset.i,1);recalcular(id);},"Registro apagado");folhaTopico(id);return;}
-  if(b=g("top"))return folhaTopico(b.dataset.top);
-  if(b=g("area")){areaSel=b.dataset.area;return render();}
-  if(b=g("aba-ir")){aba=b.dataset.abaIr;render();return window.scrollTo(0,0);}
-  if(b=g("meta")){const a=b.dataset.meta;return mudar(()=>{S.meta[a]=Math.max(0,(S.meta[a]||0)+ +b.dataset.d);});}
-  if(b=g("assok")){const k=b.dataset.assok;const prox={0:1,1:3,3:7,7:15};return mudar(()=>{const a=S.assuntos[k];a.iv=a.iv>=15?null:(prox[a.iv]||3);a.prox=a.iv?addDias(a.iv):null;},S.assuntos[k].iv>=15?`${k}: dominado ✓`:`${k}: revisão adiada`);}
-  if(b=g("assdel")){const k=b.dataset.assdel;return mudar(()=>{delete S.assuntos[k];},`${k} apagado`);}
-  if(b=g("acao"))return acao(b.dataset.acao);
+  if(g("fechar"))return fecharFolha();
+  if(b=g("li")){e.stopPropagation();const id=b.dataset.li;const aberta=document.getElementById("layer").classList.contains("on");mudar(()=>registrar(id,{t:"e"}));if(aberta)fecharFolha();return;}
+  if(b=g("n")){const k=b.dataset.n;const el=document.getElementById("n"+k);let v=Math.max(0,(+el.value||0)+ +b.dataset.d);
+    if(k==="a")v=Math.min(v,+document.getElementById("nq").value||0);el.value=v;if(k==="q"&&+document.getElementById("na").value>v)document.getElementById("na").value=v;return;}
+  if(b=g("salvarq")){const q=+document.getElementById("nq").value||0,a=Math.min(+document.getElementById("na").value||0,q);
+    if(!q)return toast("Coloque quantas questões fez.");nq=q;na=a;const id=b.dataset.salvarq;mudar(()=>registrar(id,{t:"q",q,a}));fecharFolha();return;}
+  if(b=g("del")){const id=b.dataset.del;mudar(()=>{S.top[id].reg.splice(+b.dataset.i,1);},"Apagado");folha(id);return;}
+  if(b=g("top"))return folha(b.dataset.top);
+  if(b=g("assok")){const k=b.dataset.assok,nx={1:3,3:7,7:15};return mudar(()=>{const a=S.ass[k];a.iv=nx[a.iv]||null;a.prox=a.iv?addDias(a.iv):null;return a.iv?`${k}: volta em ${a.iv} dias`:`${k}: dominado ✓`;});}
+  if(b=g("assdel"))return mudar(()=>{delete S.ass[b.dataset.assdel];},"Apagado");
+  if(b=g("acao")){const a=b.dataset.acao;
+    if(a==="fase")return mudar(()=>{S.fase=S.fase===1?2:1;return S.fase===2?"Fase de revisões ligada":"De volta à 1ª leitura";});
+    if(a==="backup"){const u=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:"application/json"}));const l=document.createElement("a");l.href=u;l.download=`estudos-${hoje()}.json`;l.click();URL.revokeObjectURL(u);return;}
+    if(a==="instalar")return instalar();}
 });
-document.addEventListener("input",e=>{if(e.target.dataset.nota!==undefined){const id=e.target.dataset.nota;S.notas[id]=e.target.value;if(!S.notas[id])delete S.notas[id];salvar();}
-  if(e.target.id==="dtProva"&&e.target.value){S.prova=e.target.value;salvar();}});
-document.addEventListener("change",e=>{if(e.target.id==="arq")lerArquivo(e.target.files[0]);});
+document.addEventListener("input",e=>{const t=e.target;
+  if(t.dataset.nota!==undefined){S.notas[t.dataset.nota]=t.value;if(!t.value)delete S.notas[t.dataset.nota];salvar();}
+  if(t.id==="nq"||t.id==="na"){/* digitação livre */}
+  if(t.dataset.cfg&&t.type==="date"&&t.value){S[t.dataset.cfg]=t.value;salvar();}});
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset.cfg==="revNaLeitura"){S.revNaLeitura=t.checked;salvar();render();}});
 
-function acao(a){
-  if(a==="plano")return mudar(()=>{S.planoMin=!S.planoMin;});
-  if(a==="importar")return importarSiteAntigo();
-  if(a==="arquivo"){if(aba!=="ajustes"){aba="ajustes";render();}return document.getElementById("arq").click();}
-  if(a==="exportar"){const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"});const u=URL.createObjectURL(b);const l=document.createElement("a");l.href=u;l.download=`caderno-estudos-${hoje()}.json`;l.click();URL.revokeObjectURL(u);return;}
-  if(a==="zerar")return mudar(()=>{const dono=S._dono;S=novoEstado();S._dono=dono;},"Tudo zerado");
-  if(a==="instalar")return instalar();
-  if(a==="sair")return sair();
-  if(a==="google")return entrarGoogle();
-  if(a==="email")return folhaEmail();
-}
-
-/* ── IMPORTAR 2026 ── */
-const URL_2026="https://firestore.googleapis.com/v1/projects/revisao-esfcex/databases/(default)/documents/usuarios/principal";
-function deFirestore(x){const [k,v]=Object.entries(x)[0];
-  if(k==="mapValue")return Object.fromEntries(Object.entries(v.fields||{}).map(([a,b])=>[a,deFirestore(b)]));
-  if(k==="arrayValue")return (v.values||[]).map(deFirestore);
-  if(k==="integerValue")return +v;if(k==="nullValue")return null;return v;}
-async function importarSiteAntigo(){
-  toast("Buscando seu 2026…");
-  try{const ctl=new AbortController();setTimeout(()=>ctl.abort(),10000);
-    const r=await fetch(URL_2026,{signal:ctl.signal});if(!r.ok)throw 0;const j=await r.json();
-    aplicar2026(Object.fromEntries(Object.entries(j.fields).map(([a,b])=>[a,deFirestore(b)])));
-  }catch(e){toast("Não consegui buscar agora. Tente de novo ou use o arquivo de backup.");}
-}
-function lerArquivo(f){if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const d=JSON.parse(rd.result);if(d.state)aplicar2026(d);else if(d.topicos){mudar(()=>{const dono=S._dono;S=Object.assign(novoEstado(),d);S._dono=dono;},"Backup restaurado");}else throw 0;}catch(e){toast("Arquivo não reconhecido.");}};rd.readAsText(f);}
-function isoVelho(d){if(!d)return null;return d.includes("/")?d.split("/").reverse().join("-"):d.slice(0,10);}
-function aplicar2026(D){
-  mudar(()=>{
-    const dono=S._dono,meta=S.meta,prova=S.prova;const manter=S.demo?null:S;
-    S=novoEstado();S._dono=dono;S.meta=meta;S.prova=prova;
-    if(manter){S.topicos=manter.topicos;S.assuntos=manter.assuntos;S.notas=manter.notas;}
-    const st=D.state||{};const H={t:{},revs:0,q:0,dias:0,ini:null,fim:null,fech:Object.keys(D.closedTopics||{}).length};const dias=new Set();
-    let ordem=0;
-    TOP.forEach(T=>{const s=st[T.id];const E=(s?.entries)||[];
-      const q=E.filter(e=>e.tipo==="questoes"&&e.acerto!=null).map(e=>+e.acerto);
-      E.forEach(e=>{const d=isoVelho(e.date);if(d)dias.add(d);});
-      H.revs+=E.length;H.q+=q.length;
-      const ac=q.length?Math.round(q.reduce((a,b)=>a+b,0)/q.length):null;
-      if(E.length)H.t[T.id]={n:E.length,ac,ult:isoVelho(s.lastDate)};
-      if(T.modo==="q"||!E.length)return;
-      const t=tp(T.id);if(t.reg.length)return; // já tem estudo de 2027: não mexe
-      // ponto de partida herdado de 2026, espalhado para não vencer tudo no mesmo dia
-      ordem++;
-      let base,prazo;
-      if(ac!=null&&ac>=88&&E.length>=5){base=30;prazo=21+(ordem%35);}
-      else if(ac!=null&&ac>=80){base=12;prazo=7+(ordem%21);}
-      else{base=4;prazo=1+(ordem%10);}
-      t.base=base;t.baseProx=addDias(prazo);recalcular(T.id);
-    });
-    const ds=[...dias].sort();H.dias=ds.length;H.ini=ds[0];H.fim=ds[ds.length-1];S.h2026=H;
-    Object.entries(D.notes||{}).forEach(([id,n])=>{if(n&&!S.notas[id])S.notas[id]=n;});
-  },"2026 importado: revisões espalhadas pelas próximas semanas");
-  aba="hoje";render();
-}
-
-/* ── LOGIN E NUVEM ── */
-let fb=null,user=null;
-function setSync(t,err){const el=document.getElementById("sync");el.textContent=t;el.classList.toggle("err",!!err);}
-function comPrazo(p,ms=10000){return Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("prazo")),ms))]);}
-async function carregarFB(){
-  if(fb)return fb;
-  const [A,Au,F]=await Promise.all(["app","auth","firestore"].map(m=>import(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-${m}.js`)));
-  const app=A.initializeApp(FB_CFG,"estudos");
-  const auth=Au.initializeAuth(app,{persistence:Au.browserLocalPersistence,popupRedirectResolver:Au.browserPopupRedirectResolver});
-  fb={Au,F,auth,db:F.getFirestore(app)};
-  Au.onAuthStateChanged(auth,u=>{user=u;if(u)baixar();else setSync("local");if(aba==="ajustes"){const c=document.getElementById("contaBox");if(c)c.innerHTML=contaHTML();}});
-  return fb;
-}
-function ref(){return fb.F.doc(fb.db,"caderneta",user.uid,"estudos","caderno");}
-async function baixar(){
-  setSync("sincronizando…");
-  try{const sn=await comPrazo(fb.F.getDoc(ref()));
-    if(S._dono&&S._dono!==user.uid){S=novoEstado();}
-    if(sn.exists()){const R=sn.data();if(S.demo||!S.ts||R.ts>=S.ts){S=Object.assign(novoEstado(),R);}else subir();}
-    else{if(S.demo){S=novoEstado();}subir();}
-    S._dono=user.uid;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}
-    setSync("salvo na nuvem");render();
-  }catch(e){setSync("sem conexão",true);}
-}
-async function subir(){
-  if(!user||!fb)return;setSync("salvando…");
-  try{S._dono=user.uid;await comPrazo(fb.F.setDoc(ref(),JSON.parse(JSON.stringify(S))));setSync("salvo na nuvem");}catch(e){setSync("não salvou",true);}
-}
-function contaHTML(){
-  if(user)return `<div class="sub" style="margin-bottom:10px">Entrou como <b>${esc(user.email||"")}</b>. Seus estudos ficam salvos na nuvem e aparecem em qualquer aparelho.</div><button class="btn" data-acao="sair">Sair</button>`;
-  return `<div class="sub" style="margin-bottom:10px">Entre para guardar seus estudos na nuvem (mesma conta da Caderneta e do Treino).</div>
-   <div style="display:grid;gap:8px"><button class="btn solid" data-acao="google">Entrar com Google</button><button class="btn" data-acao="email">Entrar com e-mail e senha</button></div>`;
-}
-async function entrarGoogle(){try{const f=await comPrazo(carregarFB());await f.Au.signInWithPopup(f.auth,new f.Au.GoogleAuthProvider());toast("Entrou!");}catch(e){toast(e.message==="prazo"?"A internet não respondeu. Tente de novo.":"Login cancelado. Tente pelo e-mail e senha.");}}
-function folhaEmail(){abrirFolha(`<h2>Entrar com e-mail</h2><div class="meta">Use o mesmo e-mail dos outros apps.</div>
-  <div class="field"><input id="em" type="email" placeholder="e-mail" autocomplete="email"></div><div class="field"><input id="pw" type="password" placeholder="senha" autocomplete="current-password"></div>
-  <div style="display:grid;gap:8px"><button class="btn solid" id="emEntrar">Entrar</button><button class="btn" id="emCriar">Criar conta</button><button class="btn-line" id="emEsqueci">Esqueci a senha</button></div>`);
-  const v=()=>[document.getElementById("em").value.trim(),document.getElementById("pw").value];
-  const run=async fn=>{try{const f=await comPrazo(carregarFB());await fn(f);fecharFolha();}catch(e){toast(e.message==="prazo"?"A internet não respondeu.":"Não deu certo. Confira e-mail e senha.");}};
-  document.getElementById("emEntrar").onclick=()=>run(f=>f.Au.signInWithEmailAndPassword(f.auth,...v()));
-  document.getElementById("emCriar").onclick=()=>run(f=>f.Au.createUserWithEmailAndPassword(f.auth,...v()));
-  document.getElementById("emEsqueci").onclick=()=>run(async f=>{await f.Au.sendPasswordResetEmail(f.auth,v()[0]);toast("Mandamos um e-mail para trocar a senha.");});
-}
-async function sair(){await fb?.Au.signOut(fb.auth);toast("Saiu da conta");render();}
-let jaLogou=false;try{jaLogou=!!localStorage.getItem(LS+"_logou")}catch(e){}
-if(jaLogou||S._dono)carregarFB().catch(()=>setSync("sem conexão",true));
-addEventListener("pagehide",()=>{clearTimeout(syncT);subir();});
-document.addEventListener("visibilitychange",()=>{if(document.hidden){clearTimeout(syncT);subir();}else{procurarVersao();render();}});
-// lembra que já logou para carregar a nuvem logo ao abrir
-setInterval(()=>{if(user)try{localStorage.setItem(LS+"_logou","1")}catch(e){}},5000);
-
-/* ── TEMA ── */
+/* ── tema, instalação, versão ── */
 const TEMAS=["claro","escuro","auto"];
-function aplicarTema(){let t="claro";try{t=localStorage.getItem("estudos_tema")||"claro"}catch(e){}
-  const real=t==="auto"?(matchMedia("(prefers-color-scheme: dark)").matches?"escuro":"claro"):t;
-  document.documentElement.dataset.tema=real;document.getElementById("btTema").textContent=t==="claro"?"☀":t==="escuro"?"☾":"◐";}
-document.getElementById("btTema").onclick=()=>{let t="claro";try{t=localStorage.getItem("estudos_tema")||"claro"}catch(e){}
-  t=TEMAS[(TEMAS.indexOf(t)+1)%3];try{localStorage.setItem("estudos_tema",t)}catch(e){}aplicarTema();toast(`Tema ${t==="auto"?"automático":t}`);};
+const temaAtual=()=>{try{return localStorage.getItem("estudos_tema")||"claro"}catch(e){return "claro"}};
+function aplicarTema(){const t=temaAtual();document.documentElement.dataset.tema=t==="auto"?(matchMedia("(prefers-color-scheme: dark)").matches?"escuro":"claro"):t;document.getElementById("btTema").textContent=t==="claro"?"☀":t==="escuro"?"☾":"◐";}
+document.getElementById("btTema").onclick=()=>{const t=TEMAS[(TEMAS.indexOf(temaAtual())+1)%3];try{localStorage.setItem("estudos_tema",t)}catch(e){}aplicarTema();toast(`Tema ${t==="auto"?"automático":t}`);};
 aplicarTema();
-
-/* ── APP INSTALÁVEL E VERSÃO ── */
-let pedidoInstalar=null;
-addEventListener("beforeinstallprompt",e=>{e.preventDefault();pedidoInstalar=e;});
-function instalar(){if(pedidoInstalar){pedidoInstalar.prompt();pedidoInstalar=null;return;}
-  abrirFolha(`<h2>Instalar como app</h2><div class="meta">Fica com ícone na tela inicial, igual aos seus outros apps.</div>
-  <div class="lab">Android (Chrome)</div><div>Menu ⋮ → <b>Adicionar à tela inicial</b> → Instalar.</div>
-  <div class="lab">iPhone (Safari)</div><div>Botão compartilhar ⬆ → <b>Adicionar à Tela de Início</b>.</div>`);}
+let pedido=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();pedido=e;});
+function instalar(){if(pedido){pedido.prompt();pedido=null;return;}
+  abrirFolha(`<h2>Instalar como app</h2><div class="lab">Android (Chrome)</div><div>Menu ⋮ → <b>Adicionar à tela inicial</b>.</div><div class="lab">iPhone (Safari)</div><div>Compartilhar ⬆ → <b>Adicionar à Tela de Início</b>.</div>`);}
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
-async function procurarVersao(){
-  try{const r=await fetch("version.json",{cache:"no-store"});const v=(await r.json()).versao;
-    if(v&&v!==VERSAO){const k="estudos_recarregou_"+v;if(sessionStorage.getItem(k))return;
-      if(document.querySelector("#layer.on")||document.activeElement===qIn){toast("Versão nova",()=>{});const b=document.querySelector(".toast button");if(b){b.textContent="Atualizar agora";b.onclick=()=>{sessionStorage.setItem(k,1);location.reload();};}}
-      else{sessionStorage.setItem(k,1);location.reload();}}}catch(e){}
-}
-procurarVersao();
-render();
+async function procurarVersao(){try{const v=(await (await fetch("version.json",{cache:"no-store"})).json()).versao;
+  if(v&&v!==VERSAO){const k="estudos_v_"+v;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,1);}catch(e){}
+    if(document.getElementById("layer").classList.contains("on")||document.activeElement===qIn){toast("Versão nova",()=>location.reload(),15000);document.querySelector(".toast button").textContent="Atualizar";}else location.reload();}}catch(e){}}
+addEventListener("pagehide",()=>{clearTimeout(syncT);if(S.ts)subir();});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){clearTimeout(syncT);if(S.ts)subir();}else{procurarVersao();baixar();}});
+render();baixar();procurarVersao();
 </script>
 </body>
 </html>
