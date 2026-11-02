@@ -162,6 +162,26 @@ textarea.note:focus{border-color:var(--blue)}
 .tab.cfg{margin-left:auto}
 .sw{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px}
 .sw input{width:22px;height:22px;accent-color:var(--blue)}
+.of{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+.paused{opacity:.55}
+.tab.off{opacity:.5}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.kpi b{display:block;font-family:var(--f-num);font-size:24px;font-weight:700}
+.kpi span{font-size:12px;color:var(--muted)}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,16px);grid-auto-columns:1fr;gap:4px}
+.heat i{border-radius:4px;background:var(--sunk)}
+.heat i.l1{background:var(--blue-soft)}.heat i.l2{background:color-mix(in srgb,var(--blue) 55%,var(--blue-soft))}.heat i.l3{background:var(--blue)}
+.heat i.hj{outline:2px solid var(--tang);outline-offset:1px}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 14px;border-top:1px solid var(--line);align-items:center}
+.mrow .bar{grid-column:1/-1}
+details.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:14px}
+details.box summary{padding:14px;font-weight:700;font-size:15px;cursor:pointer;list-style:none}
+details.box summary::after{content:" ▾";color:var(--muted)}
+details.sm summary{font-size:13px;color:var(--blue);font-weight:600;cursor:pointer;padding:10px 0}
+.startcard{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.startcard button{min-height:56px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font-weight:700;display:flex;align-items:center;gap:8px;padding:0 12px}
+.startcard i{width:10px;height:10px;border-radius:3px}
 </style>
 </head>
 <body>
@@ -174,7 +194,7 @@ textarea.note:focus{border-color:var(--blue)}
   </div>
   <div class="tabs" role="tablist" id="tabs"></div>
   <div class="quick">
-    <input id="q" placeholder="estudei boto · koch 8/10 · errei crase" autocomplete="off" enterkeyhint="send">
+    <input id="q" placeholder="estudei capitanias · koch 8/10 · errei crase" autocomplete="off" enterkeyhint="send">
     <button id="qGo" disabled>Lançar</button>
   </div>
   <div class="pills" id="pills"></div>
@@ -183,25 +203,27 @@ textarea.note:focus{border-color:var(--blue)}
 <div id="layer"><div class="back"></div><div class="sheet"></div></div>
 
 <script>
-const VERSAO = "02/11 17:30";
+const VERSAO = "02/11 19:00";
 const FB_V = "12.19.0";
-/* banco da temporada 2026 (o mesmo do site antigo). 2026 fica em usuarios/principal e só é LIDO. */
+/* banco do site antigo. 2026 fica em usuarios/principal e só é LIDO; 2027 em usuarios/temporada2027 */
 const FB_CFG = {apiKey:"AIzaSyBA3rElhXMxQpBqnLk9kQwYq1kUobDppUU",authDomain:"revisao-esfcex.firebaseapp.com",projectId:"revisao-esfcex",storageBucket:"revisao-esfcex.firebasestorage.app",messagingSenderId:"751976254334",appId:"1:751976254334:web:c2ce5b16ac7ba972e8c12f"};
 const DOC_2026 = ["usuarios","principal"], DOC_2027 = ["usuarios","temporada2027"];
 const LS = "estudos2027";
 
-const RAW = [["lp1", "LP", "Gramática e Norma", "ALMEIDA, Napoleão Mendes de — Dicionário de questões vernáculas"], ["lp2", "LP", "Ensino e Interação", "ANTUNES, Irandé — Aula de português: encontro & interação"], ["lp3", "LP", "Linguagem e Discurso", "BAKHTIN, Mikhail — Estética da criação verbal"], ["lp4", "LP", "Gramática e Norma", "BECHARA, Evanildo — Moderna Gramática Portuguesa"], ["lp5", "LP", "Legislação e Documentos Oficiais", "BRASIL — Base Nacional Comum Curricular (2018)"], ["lp6", "LP", "Legislação e Documentos Oficiais", "BRASIL — Manual de Redação da Presidência da República (3. ed.)"], ["lp7", "LP", "Gramática e Norma", "FERREIRA, Aurélio Buarque de Holanda — Novo Dicionário da Língua Portuguesa"], ["lp8", "LP", "Produção Textual e Gêneros", "KOCH, Ingedore G. V.; ELIAS, Vanda Maria — Ler e Escrever: estratégias de produção textual"], ["lp9", "LP", "Produção Textual e Gêneros", "MARCUSCHI, Luiz Antônio — Produção textual, análise de gêneros e compreensão"], ["lp10", "LP", "Produção Textual e Gêneros", "MARQUESI, Sueli C.; PAULIUKONIS, Aparecida L.; ELIAS, Vanda Maria — Linguística Textual e ensino"], ["lp11", "LP", "Linguagem e Discurso", "MARTINS, Nilce Sant'anna — Introdução à estilística"], ["lp12", "LP", "Gramática e Norma", "NEVES, Maria Helena Moura — Que gramática estudar na escola?"], ["lp13", "LP", "Produção Textual e Gêneros", "SCHNEUWLY, Bernard; DOLZ, Joaquim — Gêneros orais e escritos na escola"], ["geo1", "GEO", "Organização do Espaço Brasileiro", "Integração ao processo de internacionalização (Integração Regional · Globalização · Desenvolvimento)"], ["geo2", "GEO", "Organização do Espaço Brasileiro", "Processo de industrialização brasileira (Industrialização · 7.3 Indústria brasileira)"], ["geo3", "GEO", "Organização do Espaço Brasileiro", "Rede de transportes brasileira (Industrialização · 7.3 Indústria brasileira)"], ["geo4", "GEO", "Organização do Espaço Brasileiro", "Questão urbana brasileira (Urbanização · 6.5 Urbanização brasileira)"], ["geo5", "GEO", "Organização do Espaço Brasileiro", "Agropecuária, estrutura fundiária e fronteiras agrícolas (Agropecuária · 4.5 Agricultura brasileira · 4.6 Questão Fundiária)"], ["geo6", "GEO", "Organização do Espaço Brasileiro", "População brasileira: evolução, estrutura e dinâmica (População · 5.5 População brasileira)"], ["geo7", "GEO", "Organização do Espaço Brasileiro", "Distribuição demográfica e migrações internas (População · 5.3 Migrações · 5.5 População brasileira)"], ["geo8", "GEO", "Questão Regional", "Regionalização do país e políticas públicas (Regionalização Brasileira)"], ["geo9", "GEO", "Questão Regional", "Regiões brasileiras: especializações e características (Regionalização Brasileira · Desenvolvimento)"], ["geo10", "GEO", "Espaço Natural", "Geomorfologia e relevo brasileiro (Geografia Física · 3.1 Relevo · Geologia)"], ["geo11", "GEO", "Espaço Natural", "Questão ambiental no Brasil (Meio Ambiente na Geografia · 9.2 Impactos no meio natural e rural · Amazônia)"], ["geo12", "GEO", "Espaço Natural", "Recursos minerais (Geologia · Energia · 8.3 Fontes de energia e recursos naturais)"], ["geo13", "GEO", "Espaço Natural", "Fontes de energia e recursos hídricos (Energia · 8.2 Produção e consumo no Brasil · Geografia Física · 3.5 Hidrografia)"], ["geo14", "GEO", "Espaço Natural", "Biosfera e climas do Brasil (Geografia Física · 3.3 Clima · 3.4 Vegetação)"], ["his1", "HIS", "Brasil Colonial", "Capitanias Hereditárias e Governos Gerais"], ["his2", "HIS", "Brasil Colonial", "Atividades econômicas e expansão colonial"], ["his3", "HIS", "Brasil Colonial", "Povos indígenas: escravidão, aldeamentos e jesuítas"], ["his4", "HIS", "Brasil Colonial", "Povos africanos escravizados no Brasil"], ["his5", "HIS", "Brasil Colonial", "Conquista dos sertões: entradas e bandeiras"], ["his6", "HIS", "Brasil Colonial", "Sistema colonial"], ["his7", "HIS", "Brasil Colonial", "Conflitos coloniais e movimentos rebeldes"], ["his8", "HIS", "Brasil Colonial", "Período joanino: transferência da Corte para o Brasil"], ["his9", "HIS", "Brasil Monárquico", "Independência do Brasil e Primeiro Reinado"], ["his10", "HIS", "Brasil Monárquico", "Constituição de 1824"], ["his11", "HIS", "Brasil Monárquico", "Militares: Guarda Nacional e Exército"], ["his12", "HIS", "Brasil Monárquico", "Regências (1831–1840) e revoltas políticas"], ["his13", "HIS", "Brasil Monárquico", "Consolidação da ordem interna e economia cafeeira"], ["his14", "HIS", "Brasil Monárquico", "Modernização: economia e cultura no Império"], ["his15", "HIS", "Brasil Monárquico", "Escravidão e lutas escravas pela liberdade"], ["his16", "HIS", "Brasil Monárquico", "Abolicionismo e abolição da escravatura"], ["his17", "HIS", "Brasil Monárquico", "Trabalho livre e imigração"], ["his18", "HIS", "Brasil Monárquico", "Política externa e Guerra do Paraguai"], ["his19", "HIS", "Brasil Monárquico", "Movimento republicano e advento da República"], ["his20", "HIS", "Brasil Republicano", "Constituição de 1891 e consolidação da República"], ["his21", "HIS", "Brasil Republicano", "Política dos Governadores"], ["his22", "HIS", "Brasil Republicano", "Coronelismo e sistema eleitoral"], ["his23", "HIS", "Brasil Republicano", "Movimento operário"], ["his24", "HIS", "Brasil Republicano", "Tenentismo"], ["his25", "HIS", "Brasil Republicano", "Revolução de 1930"], ["his26", "HIS", "Brasil Republicano", "Período Vargas (1930–1945)"], ["his27", "HIS", "Brasil Republicano", "Estado Novo"], ["his28", "HIS", "Brasil Republicano", "Brasil na II Guerra Mundial e a FEB"], ["his29", "HIS", "Brasil Republicano", "Período democrático (1945–1964)"], ["his30", "HIS", "Brasil Republicano", "Intervenção militar (1964–1985)"], ["his31", "HIS", "Brasil Republicano", "Milagre econômico"], ["his32", "HIS", "Brasil Republicano", "Redemocratização"], ["his33", "HIS", "Brasil Republicano", "Movimentos sociais nas décadas de 1970 e 1980"], ["his34", "HIS", "Brasil Republicano", "Campanha pelas eleições diretas"], ["his35", "HIS", "Brasil Republicano", "Constituição de 1988"], ["his36", "HIS", "Brasil Republicano", "Brasil pós-1985: economia, sociedade e cultura"], ["ped1", "PED", "Cultura e Escola", "ALCÂNTARA — Escola e cultura escolar durante e pós-pandemia"], ["ped2", "PED", "Currículo e Tecnologia", "ALMEIDA; VALENTE — Integração currículo e tecnologias"], ["ped3", "PED", "Cultura e Escola", "BARBOSA — Culturas escolares, de infância e familiares"], ["ped4", "PED", "Metodologias", "BENDER — Aprendizagem baseada em projetos"], ["ped5", "PED", "Avaliação", "BONAMINO; SOUSA — Três gerações de avaliação da educação básica"], ["ped6", "PED", "Cultura e Escola", "BOTO — A liturgia da escola moderna"], ["ped7", "PED", "Currículo e Tecnologia", "COLL; MONEREO — Psicologia da Educação Virtual"], ["ped8", "PED", "Metodologias", "DIAS et al. — Tendências metodológicas em educação matemática"], ["ped9", "PED", "Desenvolvimento", "FONSECA — Desenvolvimento Psicomotor e Aprendizagem"], ["ped10", "PED", "Alfabetização e Letramento", "FRADE; ARAÚJO; GLÓRIA — Multimodalidade na alfabetização"], ["ped11", "PED", "Avaliação", "HOFFMANN — Avaliar para promover"], ["ped12", "PED", "Desenvolvimento", "LA TAILLE; OLIVEIRA; DANTAS — Piaget, Vygotsky, Wallon"], ["ped13", "PED", "Formação Docente", "NÓVOA — Professores: imagens do futuro presente"], ["ped14", "PED", "Gestão Escolar", "PARO — A estrutura didática e administrativa da escola"], ["ped15", "PED", "Cultura e Escola", "PAULILO — A compreensão histórica do fracasso escolar"], ["ped16", "PED", "Currículo e Tecnologia", "PEIXOTO — Tecnologias e relações pedagógicas"], ["ped17", "PED", "Gestão Escolar", "PEREIRA — Políticas de Estado e organização pedagógica"], ["ped18", "PED", "Alfabetização e Letramento", "ROJO — Pedagogia dos Multiletramentos"], ["ped19", "PED", "Inclusão", "ROPOLI — A Educação Especial na Perspectiva da Inclusão"], ["ped20", "PED", "Gestão Escolar", "SANTOS et al. — Gestão democrática e participação social"], ["ped21", "PED", "Alfabetização e Letramento", "SANTOS, Wildson — Educação científica e letramento"], ["ped22", "PED", "Alfabetização e Letramento", "SASSERON; CARVALHO — Alfabetização científica"], ["ped23", "PED", "Currículo e Tecnologia", "SILVA, Roberto — Currículo, conhecimento e transmissão cultural"], ["ped24", "PED", "Currículo e Tecnologia", "SILVA, Tomaz Tadeu — Currículo, conhecimento e democracia"], ["ped25", "PED", "Alfabetização e Letramento", "SOARES — Letramento e alfabetização: as muitas facetas"], ["ped26", "PED", "Formação Docente", "TARDIF — Saberes docentes e formação profissional"], ["ped27", "PED", "Cultura e Escola", "VASCONCELLOS — Indisciplina e disciplina escolar"], ["ped28", "PED", "Gestão Escolar", "VEIGA — Projeto Político-Pedagógico e gestão democrática"], ["ped29", "PED", "Metodologias", "ZABALA — A Prática educativa: como ensinar"], ["leg1", "LEG", "", "Constituição Federal — arts. 205 a 214"], ["leg2", "LEG", "", "ECA — arts. selecionados (Lei 8.069/1990)"], ["leg3", "LEG", "", "LDB — Lei 9.394/1996"], ["leg4", "LEG", "", "DCN Educação Básica — Res. CNE/CEB 04/2010"], ["leg5", "LEG", "", "DCN Ensino Fundamental 9 anos — Res. CNE/CEB 07/2010"], ["leg6", "LEG", "", "Conselhos escolares — democratização e cidadania"], ["leg7", "LEG", "", "Diretrizes para Educação em Direitos Humanos"], ["leg8", "LEG", "", "Diretrizes AEE — Educação Especial (Res. 04/2009)"], ["leg9", "LEG", "", "Política Nacional de Educação Especial Inclusiva"], ["leg10", "LEG", "", "BNCC (2017)"], ["leg11", "LEG", "", "Guia sobre usos de telas por crianças e adolescentes"]];
-const POR_QUESTOES = ["lp1","lp4","lp6","lp7"];
-const CHAVES = {lp1:"napoleao",lp2:"antunes",lp3:"bakhtin",lp4:"bechara",lp5:"bncc",lp6:"manual",lp7:"aurelio",lp8:"koch",lp9:"marcuschi",lp10:"marquesi pauliukonis",lp11:"nilce estilistica",lp12:"neves",lp13:"dolz schneuwly",
+/* [id, matéria, grupo, nome oficial (edital), nome curto, modo] — modo "q" = estuda por questões, sem leitura */
+const RAW = [["lpa1", "LP", "Relação de assuntos — estudo por questões", "1. Compreensão e interpretação de textos de gêneros variados.", "", "q"], ["lpa2", "LP", "Relação de assuntos — estudo por questões", "2. Níveis de significação: sinônimos, antônimos, parônimos, hiperônimos e hipônimos.", "", "q"], ["lpa3", "LP", "Relação de assuntos — estudo por questões", "3. Reconhecimento de tipos e gêneros textuais.", "", "q"], ["lpa4", "LP", "Relação de assuntos — estudo por questões", "4. A estilística da palavra e a estilística da frase.", "", "q"], ["lpa5", "LP", "Relação de assuntos — estudo por questões", "5. Ortografia oficial.", "", "q"], ["lpa6", "LP", "Relação de assuntos — estudo por questões", "6. Acentuação gráfica.", "", "q"], ["lpa7", "LP", "Relação de assuntos — estudo por questões", "7. Coesão textual: referenciação e sequenciação textual.", "", "q"], ["lpa8", "LP", "Relação de assuntos — estudo por questões", "8. Coerência textual: fatores.", "", "q"], ["lpa9", "LP", "Relação de assuntos — estudo por questões", "9. Emprego/correlação de tempos e modos verbais.", "", "q"], ["lpa10", "LP", "Relação de assuntos — estudo por questões", "10. Estrutura morfossintática do período simples.", "", "q"], ["lpa11", "LP", "Relação de assuntos — estudo por questões", "11. Relações de coordenação entre orações e entre termos da oração.", "", "q"], ["lpa12", "LP", "Relação de assuntos — estudo por questões", "12. Relações de subordinação entre orações e entre termos da oração.", "", "q"], ["lpa13", "LP", "Relação de assuntos — estudo por questões", "13. Sinais de pontuação.", "", "q"], ["lpa14", "LP", "Relação de assuntos — estudo por questões", "14. Concordância verbal e concordância nominal.", "", "q"], ["lpa15", "LP", "Relação de assuntos — estudo por questões", "15. Regência verbal e regência nominal.", "", "q"], ["lpa16", "LP", "Relação de assuntos — estudo por questões", "16. Sinal indicativo de crase.", "", "q"], ["lpa17", "LP", "Relação de assuntos — estudo por questões", "17. Colocação dos pronomes átonos.", "", "q"], ["lp1", "LP", "Bibliografia — Conhecimentos Gerais", "ALMEIDA, Napoleão Mendes de. Dicionário de questões vernáculas. São Paulo: Ática, 2006.", "Napoleão — Dicionário de questões vernáculas", "q"], ["lp4", "LP", "Bibliografia — Conhecimentos Gerais", "BECHARA, Evanildo. Moderna Gramática Portuguesa. 39. ed. Rio de Janeiro: Nova Fronteira, 2019.", "Bechara — Moderna Gramática", "q"], ["lp6", "LP", "Bibliografia — Conhecimentos Gerais", "BRASIL. Presidência da República. Casa Civil. Manual de Redação da Presidência da República. 3. ed. rev., atual. e ampl. Brasília: Presidência da República, 2018.", "Manual de Redação da Presidência", "q"], ["lp7", "LP", "Bibliografia — Conhecimentos Gerais", "FERREIRA, Aurélio Buarque de Holanda. Novo Dicionário da Língua Portuguesa. 5. ed. Curitiba-PR: Editora Positivo, 2014.", "Aurélio — Novo Dicionário", "q"], ["lp14", "LP", "Bibliografia — Conhecimentos Gerais", "KOCH, Ingedore G. Villaça; ELIAS, Vanda Maria. Ler e Compreender – os sentidos do texto. 3. ed. São Paulo: Contexto, 2011.", "Koch & Elias — Ler e compreender", "l"], ["lp9", "LP", "Bibliografia — Conhecimentos Gerais", "MARCUSCHI, Luiz Antônio. Produção textual, análise de gêneros e compreensão. São Paulo: Parábola Editorial, 2008.", "Marcuschi — Produção textual, análise de gêneros e compreensão", "l"], ["lp11", "LP", "Bibliografia — Conhecimentos Gerais", "MARTINS, Nilce Sant'anna. Introdução à estilística. São Paulo: EDUSP, 2008.", "Nilce Sant’Anna Martins — Introdução à estilística", "l"], ["lp2", "LP", "Bibliografia — Magistério (aguardando anexo do edital)", "ANTUNES, Irandé — Aula de português: encontro & interação", "Antunes — Aula de português: encontro & interação", "l"], ["lp3", "LP", "Bibliografia — Magistério (aguardando anexo do edital)", "BAKHTIN, Mikhail — Estética da criação verbal", "Bakhtin — Estética da criação verbal", "l"], ["lp5", "LP", "Bibliografia — Magistério (aguardando anexo do edital)", "BRASIL — Base Nacional Comum Curricular (2018)", "Brasil — Base Nacional Comum Curricular (2018)", "l"], ["lp8", "LP", "Bibliografia — Magistério (aguardando anexo do edital)", "KOCH, Ingedore G. V.; ELIAS, Vanda Maria — Ler e Escrever: estratégias de produção textual", "Koch — Ler e Escrever: estratégias de produção textual", "l"], ["lp10", "LP", "Bibliografia — Magistério (aguardando anexo do edital)", "MARQUESI, Sueli C.; PAULIUKONIS, Aparecida L.; ELIAS, Vanda Maria — Linguística Textual e ensino", "Marquesi — Linguística Textual e ensino", "l"], ["lp12", "LP", "Bibliografia — Magistério (aguardando anexo do edital)", "NEVES, Maria Helena Moura — Que gramática estudar na escola?", "Neves — Que gramática estudar na escola?", "l"], ["lp13", "LP", "Bibliografia — Magistério (aguardando anexo do edital)", "SCHNEUWLY, Bernard; DOLZ, Joaquim — Gêneros orais e escritos na escola", "Schneuwly — Gêneros orais e escritos na escola", "l"], ["geo1", "GEO", "1. A Organização do Espaço Brasileiro", "a. A integração brasileira ao processo de internacionalização da economia; o desenvolvimento econômico e social; e os indicadores sociais do Brasil.", "", "l"], ["geo2", "GEO", "1. A Organização do Espaço Brasileiro", "b. O processo de industrialização brasileira, os fatores de localização e as suas repercussões: econômicas, ambientais e urbanas.", "", "l"], ["geo3", "GEO", "1. A Organização do Espaço Brasileiro", "c. A rede de transportes brasileira e sua estrutura e evolução.", "", "l"], ["geo4", "GEO", "1. A Organização do Espaço Brasileiro", "d. A questão urbana brasileira: processos e estruturas.", "", "l"], ["geo5", "GEO", "1. A Organização do Espaço Brasileiro", "e. A agropecuária, a estrutura fundiária e problemas sociais rurais no Brasil, dinâmica das fronteiras agrícolas e sua expansão para o Centro-Oeste e para a Amazônia.", "", "l"], ["geo6", "GEO", "1. A Organização do Espaço Brasileiro", "f. A população brasileira: evolução, estrutura e dinâmica.", "", "l"], ["geo7", "GEO", "1. A Organização do Espaço Brasileiro", "g. A distribuição dos efetivos demográficos e os movimentos migratórios internos: reflexos sociais e espaciais.", "", "l"], ["geo8", "GEO", "2. A Questão Regional no Brasil", "a. A regionalização do país: sua justificativa socioeconômica e critérios adotados pelo Instituto Brasileiro de Geografia e Estatística (IBGE); as regiões e as políticas públicas para fins de planejamento.", "", "l"], ["geo9", "GEO", "2. A Questão Regional no Brasil", "b. As regiões brasileiras: especializações territoriais, produtivas e características sociais e econômicas.", "", "l"], ["geo10", "GEO", "3. O Espaço Natural Brasileiro: seu aproveitamento econômico e o meio ambiente.", "a. Geomorfologia do território brasileiro: O território brasileiro e a placa sul-americana; as bases geológicas do Brasil; as feições do relevo; os domínios naturais e as classificações do relevo brasileiro.", "", "l"], ["geo11", "GEO", "3. O Espaço Natural Brasileiro: seu aproveitamento econômico e o meio ambiente.", "b. A questão ambiental no Brasil.", "", "l"], ["geo12", "GEO", "3. O Espaço Natural Brasileiro: seu aproveitamento econômico e o meio ambiente.", "c. Os recursos minerais.", "", "l"], ["geo13", "GEO", "3. O Espaço Natural Brasileiro: seu aproveitamento econômico e o meio ambiente.", "d. As fontes de energia e os recursos hídricos.", "", "l"], ["geo14", "GEO", "3. O Espaço Natural Brasileiro: seu aproveitamento econômico e o meio ambiente.", "e. A biosfera e os climas do Brasil.", "", "l"], ["his1", "HIS", "1. Brasil Colonial: administração, economia, cultura e sociedade", "a. As Capitanias Hereditárias e Governos Gerais.", "", "l"], ["his2", "HIS", "1. Brasil Colonial: administração, economia, cultura e sociedade", "b. As atividades econômicas e a expansão colonial: agricultura, extrativismo, pecuária, comércio e mineração.", "", "l"], ["his3", "HIS", "1. Brasil Colonial: administração, economia, cultura e sociedade", "c. Os povos indígenas: escravidão, aldeamentos e a ação jesuítica.", "", "l"], ["his4", "HIS", "1. Brasil Colonial: administração, economia, cultura e sociedade", "d. Os povos africanos escravizados no Brasil.", "", "l"], ["his5", "HIS", "1. Brasil Colonial: administração, economia, cultura e sociedade", "e. A conquista dos sertões: entradas e bandeiras.", "", "l"], ["his6", "HIS", "1. Brasil Colonial: administração, economia, cultura e sociedade", "f. O sistema colonial.", "", "l"], ["his7", "HIS", "1. Brasil Colonial: administração, economia, cultura e sociedade", "g. Os conflitos coloniais e os movimentos rebeldes de livres e de escravos do final do século XVIII e início do século XIX.", "", "l"], ["his8", "HIS", "1. Brasil Colonial: administração, economia, cultura e sociedade", "h. O período joanino no Brasil: a transferência da Corte portuguesa para o Brasil e seus efeitos.", "", "l"], ["his9", "HIS", "2. Brasil Monárquico", "a. A independência do Brasil e o Primeiro Reinado.", "", "l"], ["his10", "HIS", "2. Brasil Monárquico", "b. A Constituição de 1824.", "", "l"], ["his11", "HIS", "2. Brasil Monárquico", "c. Militares: a Guarda Nacional e o Exército.", "", "l"], ["his12", "HIS", "2. Brasil Monárquico", "d. Regências (1831-1840): o Ato Adicional de 1834 e as revoltas políticas e sociais.", "", "l"], ["his13", "HIS", "2. Brasil Monárquico", "e. A consolidação da ordem interna: o fim das rebeliões, os partidos, o fortalecimento do Estado, a economia cafeeira.", "", "l"], ["his14", "HIS", "2. Brasil Monárquico", "f. Modernização: economia e cultura na sociedade imperial.", "", "l"], ["his15", "HIS", "2. Brasil Monárquico", "g. A escravidão e as lutas escravas pela liberdade.", "", "l"], ["his16", "HIS", "2. Brasil Monárquico", "h. O movimento abolicionista e a abolição da escravatura.", "", "l"], ["his17", "HIS", "2. Brasil Monárquico", "i. A introdução do trabalho livre e a imigração.", "", "l"], ["his18", "HIS", "2. Brasil Monárquico", "j. Política externa: as questões platinas, a Guerra do Paraguai e o Exército.", "", "l"], ["his19", "HIS", "2. Brasil Monárquico", "k. O movimento republicano e o advento da República.", "", "l"], ["his20", "HIS", "3. Brasil Republicano", "a. A Constituição de 1891, os militares e a consolidação da República.", "", "l"], ["his21", "HIS", "3. Brasil Republicano", "b. A “Política dos Governadores”.", "", "l"], ["his22", "HIS", "3. Brasil Republicano", "c. O coronelismo e o sistema eleitoral.", "", "l"], ["his23", "HIS", "3. Brasil Republicano", "d. O movimento operário.", "", "l"], ["his24", "HIS", "3. Brasil Republicano", "e. O tenentismo.", "", "l"], ["his25", "HIS", "3. Brasil Republicano", "f. A Revolução de 1930.", "", "l"], ["his26", "HIS", "3. Brasil Republicano", "g. O período Vargas (1930-1945): economia, sociedade, política e cultura.", "", "l"], ["his27", "HIS", "3. Brasil Republicano", "h. O Estado Novo.", "", "l"], ["his28", "HIS", "3. Brasil Republicano", "i. O Brasil na II Guerra Mundial; a FEB.", "", "l"], ["his29", "HIS", "3. Brasil Republicano", "j. O período democrático (1945-1964): economia, sociedade, política e cultura.", "", "l"], ["his30", "HIS", "3. Brasil Republicano", "k. A intervenção militar, sua natureza e transformações entre 1964 e 1985. As mudanças institucionais durante o período.", "", "l"], ["his31", "HIS", "3. Brasil Republicano", "l. O “milagre econômico”.", "", "l"], ["his32", "HIS", "3. Brasil Republicano", "m. A redemocratização.", "", "l"], ["his33", "HIS", "3. Brasil Republicano", "n. Os movimentos sociais nas décadas de 1970 e 1980: estudantes, operários e demais setores da sociedade.", "", "l"], ["his34", "HIS", "3. Brasil Republicano", "o. A campanha pelas eleições diretas.", "", "l"], ["his35", "HIS", "3. Brasil Republicano", "p. A Constituição de 1988.", "", "l"], ["his36", "HIS", "3. Brasil Republicano", "q. O Brasil pós-1985: economia, sociedade, política e cultura.", "", "l"], ["ped1", "PED", "Cultura e Escola", "ALCÂNTARA — Escola e cultura escolar durante e pós-pandemia", "Alcântara — Escola e cultura escolar durante e pós-pandemia", "l"], ["ped2", "PED", "Currículo e Tecnologia", "ALMEIDA; VALENTE — Integração currículo e tecnologias", "Almeida — Integração currículo e tecnologias", "l"], ["ped3", "PED", "Cultura e Escola", "BARBOSA — Culturas escolares, de infância e familiares", "Barbosa — Culturas escolares, de infância e familiares", "l"], ["ped4", "PED", "Metodologias", "BENDER — Aprendizagem baseada em projetos", "Bender — Aprendizagem baseada em projetos", "l"], ["ped5", "PED", "Avaliação", "BONAMINO; SOUSA — Três gerações de avaliação da educação básica", "Bonamino — Três gerações de avaliação da educação básica", "l"], ["ped6", "PED", "Cultura e Escola", "BOTO — A liturgia da escola moderna", "Boto — A liturgia da escola moderna", "l"], ["ped7", "PED", "Currículo e Tecnologia", "COLL; MONEREO — Psicologia da Educação Virtual", "Coll — Psicologia da Educação Virtual", "l"], ["ped8", "PED", "Metodologias", "DIAS et al. — Tendências metodológicas em educação matemática", "Dias Et Al. — Tendências metodológicas em educação matemática", "l"], ["ped9", "PED", "Desenvolvimento", "FONSECA — Desenvolvimento Psicomotor e Aprendizagem", "Fonseca — Desenvolvimento Psicomotor e Aprendizagem", "l"], ["ped10", "PED", "Alfabetização e Letramento", "FRADE; ARAÚJO; GLÓRIA — Multimodalidade na alfabetização", "Frade — Multimodalidade na alfabetização", "l"], ["ped11", "PED", "Avaliação", "HOFFMANN — Avaliar para promover", "Hoffmann — Avaliar para promover", "l"], ["ped12", "PED", "Desenvolvimento", "LA TAILLE; OLIVEIRA; DANTAS — Piaget, Vygotsky, Wallon", "La Taille — Piaget, Vygotsky, Wallon", "l"], ["ped13", "PED", "Formação Docente", "NÓVOA — Professores: imagens do futuro presente", "Nóvoa — Professores: imagens do futuro presente", "l"], ["ped14", "PED", "Gestão Escolar", "PARO — A estrutura didática e administrativa da escola", "Paro — A estrutura didática e administrativa da escola", "l"], ["ped15", "PED", "Cultura e Escola", "PAULILO — A compreensão histórica do fracasso escolar", "Paulilo — A compreensão histórica do fracasso escolar", "l"], ["ped16", "PED", "Currículo e Tecnologia", "PEIXOTO — Tecnologias e relações pedagógicas", "Peixoto — Tecnologias e relações pedagógicas", "l"], ["ped17", "PED", "Gestão Escolar", "PEREIRA — Políticas de Estado e organização pedagógica", "Pereira — Políticas de Estado e organização pedagógica", "l"], ["ped18", "PED", "Alfabetização e Letramento", "ROJO — Pedagogia dos Multiletramentos", "Rojo — Pedagogia dos Multiletramentos", "l"], ["ped19", "PED", "Inclusão", "ROPOLI — A Educação Especial na Perspectiva da Inclusão", "Ropoli — A Educação Especial na Perspectiva da Inclusão", "l"], ["ped20", "PED", "Gestão Escolar", "SANTOS et al. — Gestão democrática e participação social", "Santos Et Al. — Gestão democrática e participação social", "l"], ["ped21", "PED", "Alfabetização e Letramento", "SANTOS, Wildson — Educação científica e letramento", "Santos — Educação científica e letramento", "l"], ["ped22", "PED", "Alfabetização e Letramento", "SASSERON; CARVALHO — Alfabetização científica", "Sasseron — Alfabetização científica", "l"], ["ped23", "PED", "Currículo e Tecnologia", "SILVA, Roberto — Currículo, conhecimento e transmissão cultural", "Silva — Currículo, conhecimento e transmissão cultural", "l"], ["ped24", "PED", "Currículo e Tecnologia", "SILVA, Tomaz Tadeu — Currículo, conhecimento e democracia", "Silva — Currículo, conhecimento e democracia", "l"], ["ped25", "PED", "Alfabetização e Letramento", "SOARES — Letramento e alfabetização: as muitas facetas", "Soares — Letramento e alfabetização: as muitas facetas", "l"], ["ped26", "PED", "Formação Docente", "TARDIF — Saberes docentes e formação profissional", "Tardif — Saberes docentes e formação profissional", "l"], ["ped27", "PED", "Cultura e Escola", "VASCONCELLOS — Indisciplina e disciplina escolar", "Vasconcellos — Indisciplina e disciplina escolar", "l"], ["ped28", "PED", "Gestão Escolar", "VEIGA — Projeto Político-Pedagógico e gestão democrática", "Veiga — Projeto Político-Pedagógico e gestão democrática", "l"], ["ped29", "PED", "Metodologias", "ZABALA — A Prática educativa: como ensinar", "Zabala — A Prática educativa: como ensinar", "l"], ["leg1", "LEG", "", "Constituição Federal — arts. 205 a 214", "", "l"], ["leg2", "LEG", "", "ECA — arts. selecionados (Lei 8.069/1990)", "", "l"], ["leg3", "LEG", "", "LDB — Lei 9.394/1996", "", "l"], ["leg4", "LEG", "", "DCN Educação Básica — Res. CNE/CEB 04/2010", "", "l"], ["leg5", "LEG", "", "DCN Ensino Fundamental 9 anos — Res. CNE/CEB 07/2010", "", "l"], ["leg6", "LEG", "", "Conselhos escolares — democratização e cidadania", "", "l"], ["leg7", "LEG", "", "Diretrizes para Educação em Direitos Humanos", "", "l"], ["leg8", "LEG", "", "Diretrizes AEE — Educação Especial (Res. 04/2009)", "", "l"], ["leg9", "LEG", "", "Política Nacional de Educação Especial Inclusiva", "", "l"], ["leg10", "LEG", "", "BNCC (2017)", "", "l"], ["leg11", "LEG", "", "Guia sobre usos de telas por crianças e adolescentes", "", "l"]];
+const CHAVES = {lp1:"napoleao vernaculas",lp4:"bechara",lp6:"manual redacao",lp7:"aurelio dicionario",lp14:"koch compreender",lp8:"koch escrever",lp9:"marcuschi",lp11:"nilce martins",lp2:"antunes",lp3:"bakhtin",lp5:"bncc lp",lp10:"marquesi pauliukonis",lp12:"neves",lp13:"dolz schneuwly",
+  lpa1:"interpretacao compreensao",lpa2:"sinonimos antonimos paronimos hiperonimos significacao",lpa3:"tipos generos",lpa4:"estilistica",lpa5:"ortografia",lpa6:"acentuacao acento",lpa7:"coesao referenciacao sequenciacao",lpa8:"coerencia",lpa9:"verbos verbal tempos modos",lpa10:"morfossintaxe morfossintatica periodo simples",lpa11:"coordenacao coordenadas",lpa12:"subordinacao subordinadas",lpa13:"pontuacao virgula",lpa14:"concordancia",lpa15:"regencia",lpa16:"crase",lpa17:"colocacao pronominal pronomes proclise enclise mesoclise",
   ped2:"valente",ped23:"roberto",ped24:"tomaz",ped20:"gestao democratica",ped21:"wildson",ped12:"la taille piaget vygotsky wallon",ped18:"rojo multiletramentos",ped25:"soares",ped29:"zabala",
   leg1:"cf constituicao",leg2:"eca",leg3:"ldb",leg4:"04/2010",leg5:"07/2010",leg6:"conselhos",leg7:"direitos humanos",leg8:"aee",leg9:"inclusiva",leg10:"bncc2017",leg11:"telas"};
 const AREAS = {LP:{nome:"Português",cor:"var(--blue)"},PED:{nome:"Pedagogia",cor:"var(--violet)"},LEG:{nome:"Legislação",cor:"var(--pink)"},HIS:{nome:"História",cor:"var(--amber)"},GEO:{nome:"Geografia",cor:"var(--mint)"}};
 const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
-const TOP = RAW.map(([id,area,g,title])=>({id,area,g,title,modo:POR_QUESTOES.includes(id)?"q":"l",
-  chaves:norm((CHAVES[id]||"")+" "+title.replace(/\(.*?\)/g," ")).split(/[^a-z0-9/]+/).filter(w=>w.length>=3)}));
+const TOP = RAW.map(([id,area,g,oficial,curto,modo])=>({id,area,g,oficial,curto,modo,
+  nome:curto||oficial,
+  chaves:norm((CHAVES[id]||"")+" "+curto+" "+oficial.replace(/\(.*?\)/g," ")).split(/[^a-z0-9/]+/).filter(w=>w.length>=3)}));
 const BYID = Object.fromEntries(TOP.map(t=>[t.id,t]));
 const LEIT = TOP.filter(T=>T.modo==="l");
-const rotulo = T => { const a=T.title.split(" — ")[0].replace(/\s*\(.*$/,""); return a.length>34?a.slice(0,32)+"…":a; };
+const rot = T => { const a=(T.curto||T.oficial).split(" — ")[0].replace(/^[a-z0-9]+\.\s*/i,""); return a.length>40?a.slice(0,38)+"…":a; };
 
 /* ── datas ── */
 function iso(d){const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10);}
@@ -211,20 +233,24 @@ function dif(a,b){return Math.round((new Date(a+"T12:00")-new Date(b+"T12:00"))/
 const fmt=d=>d?d.slice(8,10)+"/"+d.slice(5,7):"—";
 
 /* ── estado ── */
-function novo(){return {ts:0,prova:"2027-08-01",fimLeitura:"2027-01-31",fase:1,revNaLeitura:false,top:{},notas:{},ass:{},h:null,notasImportadas:false};}
+function novo(){return {ts:0,prova:"2027-08-01",fimLeitura:"2027-01-31",fase:1,revNaLeitura:false,ativas:{},top:{},notas:{},ass:{},sims:[],h:null,notasImportadas:false};}
+function ajustar(x){x=Object.assign(novo(),x||{});if(x.fimLeitura==="2027-03-31")x.fimLeitura="2027-01-31";if(!x.ativas)x.ativas={};if(!x.sims)x.sims=[];return x;}
 let S; try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
-S=Object.assign(novo(),S||{});if(S.fimLeitura==="2027-03-31")S.fimLeitura="2027-01-31";
+S=ajustar(S);
+const ativa=a=>!!S.ativas[a];
 const R=id=>S.top[id]?.reg||[];
 const reg=id=>(S.top[id]||(S.top[id]={reg:[]})).reg;
 const estudado=id=>R(id).some(r=>r.t==="e");
-function acerto(id){let q=0,a=0;R(id).forEach(r=>{if(r.t==="q"){q+=r.q;a+=r.a;}});return q?{q,a,p:Math.round(a/q*100)}:null;}
+function acerto(ids){let q=0,a=0;[].concat(ids).forEach(id=>R(id).forEach(r=>{if(r.t==="q"){q+=r.q;a+=r.a;}}));return q?{q,a,p:Math.round(a/q*100)}:null;}
 const h26=id=>S.h?.t?.[id];
 
-/* ── revisão espaçada (vale na fase 2, ou na 1 se ligado em Ajustes) ── */
+/* ── revisão espaçada ── */
 function agenda(id){
   let iv=0,prox=null;
   R(id).forEach(r=>{
     if(r.t==="e")iv=iv?Math.min(60,Math.round(iv*1.5)):7;
+    else if(r.t==="r")iv=iv?Math.min(60,Math.round(iv*2)):3;
+    else if(r.t==="x")iv=1;
     else{const p=r.a/r.q;iv=p>=.85?Math.min(60,Math.round(Math.max(iv,3)*2.3)):p>=.7?Math.min(30,Math.round(Math.max(iv,3)*1.4)):2;}
     prox=addDias(iv,r.d);
   });
@@ -233,27 +259,26 @@ function agenda(id){
 const revisando=()=>S.fase===2||S.revNaLeitura;
 function situacao(id){
   const T=BYID[id];
-  if(T.modo==="q")return {k:"cons",txt:"por questões",o:900};
-  if(!estudado(id))return {k:"new",txt:"não lido",o:500};
-  if(!revisando()){const a=acerto(id);return {k:"ok",txt:a?`${a.p}%`:"lido",o:600};}
+  if(T.modo==="q"){if(!R(id).length)return {k:"cons",txt:"por questões",o:900};}
+  else{if(!estudado(id))return {k:"new",txt:T.area==="HIS"||T.area==="GEO"?"não estudado":"não lido",o:500};
+    if(!revisando()){const a=acerto(id);return {k:"ok",txt:a?`${a.p}%`:"estudado ✓",o:600};}}
   const d=dif(agenda(id),hoje());
   if(d<0)return {k:"late",txt:`atrasado ${-d}d`,o:d};
   if(d===0)return {k:"due",txt:"revisar hoje",o:0};
   return {k:"ok",txt:d===1?"amanhã":`em ${d}d`,o:100+d};
 }
+const vence=id=>{const k=situacao(id).k;return (k==="late"||k==="due")&&ativa(BYID[id].area)&&(BYID[id].modo==="q"||revisando());};
 
-/* ── ordem da 1ª leitura: intercala matérias, puxa primeiro o que foi mais fraco em 2026 ── */
+/* ── fila da 1ª leitura: só matérias começadas; intercala e puxa primeiro o mais fraco de 2026 ── */
 const PESO={PED:3,LEG:2,LP:2,HIS:1.5,GEO:1.2};
 function fraqueza(id){const h=h26(id);if(!h)return 50;return (h.ac==null?60:100-h.ac)+(h.n<3?10:0);}
+function ordemArea(a){return LEIT.filter(T=>T.area===a&&!estudado(T.id)).sort((x,y)=>(T=>T.area==="HIS"||T.area==="GEO")(x)?0:fraqueza(y.id)-fraqueza(x.id));}
 function fila(n){
-  const feitos={},tot={};LEIT.forEach(T=>{tot[T.area]=(tot[T.area]||0)+1;feitos[T.area]=(feitos[T.area]||0)+(estudado(T.id)?1:0);});
-  const rest=Object.fromEntries(Object.keys(AREAS).map(a=>[a,LEIT.filter(T=>T.area===a&&!estudado(T.id)).sort((x,y)=>fraqueza(y.id)-fraqueza(x.id))]));
+  const as=Object.keys(AREAS).filter(ativa);const feitos={},tot={},rest={};
+  as.forEach(a=>{const l=LEIT.filter(T=>T.area===a);tot[a]=l.length;feitos[a]=l.filter(T=>estudado(T.id)).length;rest[a]=ordemArea(a);});
   const out=[];
-  while(out.length<n){
-    let best=null,bv=1e9;
-    for(const a in rest){if(!rest[a].length)continue;const v=feitos[a]/tot[a]/PESO[a];if(v<bv){bv=v;best=a;}}
-    if(!best)break;out.push(rest[best].shift());feitos[best]++;
-  }
+  while(out.length<n){let best=null,bv=1e9;for(const a of as){if(!rest[a].length)continue;const v=feitos[a]/tot[a]/PESO[a];if(v<bv){bv=v;best=a;}}
+    if(!best)break;out.push(rest[best].shift());feitos[best]++;}
   return out;
 }
 
@@ -262,34 +287,28 @@ let fb=null,syncT=null;
 function setSync(t,err){const e=document.getElementById("sync");e.textContent=t;e.classList.toggle("err",!!err);}
 function salvar(){S.ts=Date.now();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}clearTimeout(syncT);setSync("salvando…");syncT=setTimeout(subir,700);}
 const prazo=(p,ms=10000)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("prazo")),ms))]);
-async function nuvem(){
-  if(fb)return fb;
+async function nuvem(){if(fb)return fb;
   const [A,F]=await Promise.all(["app","firestore"].map(m=>import(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-${m}.js`)));
-  const app=A.initializeApp(FB_CFG,"estudos2027");fb={F,db:F.getFirestore(app)};return fb;
-}
+  fb={F,db:F.getFirestore(A.initializeApp(FB_CFG,"estudos2027"))};return fb;}
 async function subir(){try{const f=await prazo(nuvem());await prazo(f.F.setDoc(f.F.doc(f.db,...DOC_2027),JSON.parse(JSON.stringify(S))));setSync("salvo");}catch(e){setSync("sem internet · salvo no aparelho",true);}}
 async function baixar(){
-  try{
-    const f=await prazo(nuvem());
+  try{const f=await prazo(nuvem());
     const sn=await prazo(f.F.getDoc(f.F.doc(f.db,...DOC_2027)));
-    if(sn.exists()&&(sn.data().ts||0)>(S.ts||0)){S=Object.assign(novo(),sn.data());if(S.fimLeitura==="2027-03-31")S.fimLeitura="2027-01-31";try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+    if(sn.exists()&&(sn.data().ts||0)>(S.ts||0)){S=ajustar(sn.data());try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
     else if(S.ts&&!sn.exists())subir();
     if(!S.h){const v=await prazo(f.F.getDoc(f.F.doc(f.db,...DOC_2026)));if(v.exists()){resumir2026(v.data());salvar();}}
     setSync("salvo");render();
   }catch(e){setSync("sem internet · salvo no aparelho",true);}
 }
-/* lê 2026 sem alterar nada lá: vira um resumo usado para ordem, comparação e anotações */
 function isoV(d){if(!d)return null;return d.includes("/")?d.split("/").reverse().join("-"):d.slice(0,10);}
 function resumir2026(D){
-  const H={t:{},dias:[],vistosPorDia:[],qArea:{},revs:0};const prim={};const dias=new Set();
+  const H={t:{},dias:[],qArea:{},revs:0};const dias=new Set();
   Object.entries(D.state||{}).forEach(([id,s])=>{const E=s.entries||[];if(!E.length||!BYID[id])return;
     const qs=E.filter(e=>e.tipo==="questoes"&&e.acerto!=null).map(e=>+e.acerto);
     H.t[id]={n:E.length,ac:qs.length?Math.round(qs.reduce((a,b)=>a+b,0)/qs.length):null,acs:qs};
     H.revs+=E.length;H.qArea[BYID[id].area]=(H.qArea[BYID[id].area]||0)+qs.length;
-    E.forEach(e=>{const d=isoV(e.date);if(d){dias.add(d);if(!prim[id]||d<prim[id])prim[id]=d;}});});
-  H.dias=[...dias].sort();
-  H.vistosPorDia=H.dias.map(d=>Object.values(prim).filter(p=>p<=d).length);
-  S.h=H;
+    E.forEach(e=>{const d=isoV(e.date);if(d)dias.add(d);});});
+  H.dias=[...dias].sort();S.h=H;
   if(!S.notasImportadas){Object.entries(D.notes||{}).forEach(([id,n])=>{if(n&&!S.notas[id])S.notas[id]=n;});S.notasImportadas=true;}
 }
 
@@ -302,92 +321,87 @@ function toast(msg,desf,ms){document.querySelector(".toast")?.remove();clearTime
 function mudar(fn,msg){const antes=JSON.stringify(S);const extra=fn();salvar();render();
   if(msg!==null)toast(extra||msg||"Feito",()=>{S=JSON.parse(antes);salvar();render();});}
 
-/* ── momentos 2026 ── */
+/* ── 2026 só em momentos pontuais ── */
 function cmp2026(id,p){const h=h26(id);if(!h||h.ac==null)return "";const d=p-h.ac;
-  return d>=5?` · ${d} pts acima de 2026 💪`:d<=-5?` · ${-d} pts abaixo de 2026 ⚠️`:" · mesmo nível de 2026";}
-function marcoQuestoes(area){const h=S.h?.qArea?.[area];if(!h)return "";
-  const n=LEIT.concat(TOP).filter((T,i,a)=>a.indexOf(T)===i&&T.area===area).reduce((s,T)=>s+R(T.id).filter(r=>r.t==="q").length,0);
-  return n===h+1?` · já são mais blocos de questões de ${AREAS[area].nome} que em 2026 inteiro 🏅`:"";}
-function diasEstudo(){const s=new Set();Object.values(S.top).forEach(t=>t.reg.forEach(r=>s.add(r.d)));return [...s].sort();}
-function ritmo2026(){const H=S.h;if(!H)return "";const d=diasEstudo().length,n=H.dias.length;
-  if(!d)return `Em 2026 foram ${n} dias de estudo. Esta temporada começa hoje.`;
-  return d>n?`Já são ${d} dias de estudo — mais que os ${n} de 2026 inteiro 🏅`:`${d} dias de estudo nesta temporada · 2026 inteiro teve ${n}.`;}
+  return d>=5?` · ${d} pts acima de 2026 💪`:d<=-5?` · ${-d} pts abaixo de 2026`:" · igual a 2026";}
+function marco(area){const h=S.h?.qArea?.[area];if(!h)return "";
+  const n=TOP.filter(T=>T.area===area).reduce((s,T)=>s+R(T.id).filter(r=>r.t==="q").length,0);
+  return n===h+1?` · mais blocos de questões de ${AREAS[area].nome} que em 2026 inteiro 🏅`:"";}
 
 /* ── lançar ── */
-function registrar(id,r){const L=reg(id);L.push(Object.assign({d:hoje()},r));
+function registrar(id,r){const T=BYID[id];reg(id).push(Object.assign({d:hoje()},r));
+  if(r.t==="e"&&!ativa(T.area))S.ativas[T.area]=hoje();
   if(S.fase===1&&LEIT.every(T=>estudado(T.id))){S.fase=2;return "1ª leitura completa! 🎉 Começam as revisões.";}
-  if(r.t==="q"){const p=Math.round(r.a/r.q*100);return `${rotulo(BYID[id])}: ${r.a}/${r.q} (${p}%)${cmp2026(id,p)}${marcoQuestoes(BYID[id].area)}`;}
-  return `Estudado: ${rotulo(BYID[id])}`;}
-function acharTopico(txt){
-  const ws=norm(txt).split(/[^a-z0-9/]+/).filter(w=>w.length>=3&&!/^(estudei|revisei|questoes|questao|fiz|errei|acertei|li|reli|li)$/.test(w));
+  if(r.t==="q"){const p=Math.round(r.a/r.q*100);return `${rot(T)}: ${r.a}/${r.q} (${p}%)${cmp2026(id,p)}${marco(T.area)}`;}
+  if(r.t==="x")return `Erro em ${rot(T)}: volta amanhã`;
+  if(r.t==="r"){const d=dif(agenda(id),hoje());return `${rot(T)}: próxima em ${d} dias`;}
+  return `Estudado: ${rot(T)}`;}
+function achar(txt,lista){
+  const ws=norm(txt).split(/[^a-z0-9/]+/).filter(w=>w.length>=3&&!/^(estudei|revisei|questoes|questao|fiz|errei|acertei|reli)$/.test(w));
   if(!ws.length)return null;let best=null,bs=0;
-  for(const T of TOP){let s=0;const ex=norm(CHAVES[T.id]||"").split(" ");
+  for(const T of lista||TOP){let s=0;const ex=norm(CHAVES[T.id]||"").split(" ");
     for(const w of ws){if(ex.includes(w))s+=3;else if(T.chaves.includes(w))s+=2;else if(w.length>=4&&T.chaves.some(c=>c.startsWith(w)))s+=1;}
     if(s>bs){bs=s;best=T;}}
   return bs>=2?best:null;}
 function interpretar(f){
   return f.split(/\s*[·;,]\s*/).map(s=>s.trim()).filter(Boolean).map(seg=>{const n=norm(seg);
-    const m=n.match(/^(errei|erro)\s+(.+)$/);if(m)return {k:"x",ass:m[2].trim(),seg};
-    const fr=n.match(/(\d+)\s*\/\s*(\d+)/);const T=acharTopico(n.replace(/\d+\s*\/\s*\d+/g," "));
+    const m=n.match(/^(errei|erro)\s+(.+)$/);
+    if(m){const T=achar(m[2],TOP.filter(T=>T.modo==="q"))||achar(m[2]);return T?{k:"x",T,seg}:{k:"xl",ass:m[2].trim(),seg};}
+    const fr=n.match(/(\d+)\s*\/\s*(\d+)/);const T=achar(n.replace(/\d+\s*\/\s*\d+/g," "));
     if(!T)return {k:"?",seg};
     if(fr&&+fr[2]>0)return {k:"q",T,a:Math.min(+fr[1],+fr[2]),q:+fr[2],seg};
-    return {k:"e",T,seg};});}
+    return {k:T.modo==="q"?"r":"e",T,seg};});}
 const qIn=document.getElementById("q"),qGo=document.getElementById("qGo"),pills=document.getElementById("pills");
 function previa(){const v=qIn.value.trim();if(!v){pills.innerHTML="";qGo.disabled=true;return;}
   const it=interpretar(v);qGo.disabled=!it.some(i=>i.k!=="?");
-  pills.innerHTML=it.map(i=>i.k==="q"?`<span class="pill q">✏️ ${rotulo(i.T)} · ${i.a}/${i.q}</span>`:i.k==="e"?`<span class="pill e">📖 ${rotulo(i.T)}</span>`:i.k==="x"?`<span class="pill x">✕ errei ${i.ass}</span>`:`<span class="pill bad">? “${i.seg}”</span>`).join("");}
+  pills.innerHTML=it.map(i=>i.k==="q"?`<span class="pill q">✏️ ${rot(i.T)} · ${i.a}/${i.q}</span>`:i.k==="e"?`<span class="pill e">📖 ${rot(i.T)}</span>`:i.k==="r"?`<span class="pill e">↻ revisei ${rot(i.T)}</span>`:i.k==="x"?`<span class="pill x">✕ errei ${rot(i.T)}</span>`:i.k==="xl"?`<span class="pill x">✕ errei ${i.ass}</span>`:`<span class="pill bad">? “${i.seg}”</span>`).join("");}
 function lancar(){const it=interpretar(qIn.value.trim()).filter(i=>i.k!=="?");if(!it.length)return;
-  mudar(()=>{let m;it.forEach(i=>{if(i.k==="x")m=errei(i.ass);else m=registrar(i.T.id,i.k==="q"?{t:"q",q:i.q,a:i.a}:{t:"e"});});return it.length>1?`${it.length} lançamentos`:m;});
+  mudar(()=>{let m;it.forEach(i=>{
+    if(i.k==="xl"){const k=norm(i.ass);const a=S.ass[k]||(S.ass[k]={erros:[],iv:0,prox:null});a.erros.push(hoje());a.iv=1;a.prox=addDias(1);m=`Erro em ${k}: volta amanhã`;}
+    else m=registrar(i.T.id,i.k==="q"?{t:"q",q:i.q,a:i.a}:{t:i.k});});
+    return it.length>1?`${it.length} lançamentos`:m;});
   qIn.value="";previa();qIn.blur();}
-function errei(ass){const k=norm(ass);const a=S.ass[k]||(S.ass[k]={erros:[],iv:0,prox:null});a.erros.push(hoje());a.iv=1;a.prox=addDias(1);return `Errou ${k}: volta amanhã`;}
 qIn.addEventListener("input",previa);qIn.addEventListener("keydown",e=>{if(e.key==="Enter")lancar();});qGo.onclick=lancar;
 
 /* ── telas ── */
 let aba="hoje";
 function render(){
   const y=scrollY;
-  const pend=revisando()?LEIT.filter(T=>["late","due"].includes(situacao(T.id).k)).length:0;
-  document.getElementById("tabs").innerHTML=[["hoje","Hoje"],...Object.entries(AREAS).map(([a,A])=>[a,A.nome]),["cfg","⚙"]]
-    .map(([k,l])=>`<button class="tab${k==="cfg"?" cfg":""}" role="tab" aria-selected="${aba===k}" data-aba="${k}">${l}${k==="hoje"&&pend?`<b>${pend}</b>`:""}</button>`).join("");
-  document.getElementById("main").innerHTML=aba==="hoje"?telaHoje():aba==="cfg"?telaCfg():telaArea(aba);
+  const pend=TOP.filter(T=>vence(T.id)).length+Object.values(S.ass).filter(a=>a.prox&&a.prox<=hoje()).length;
+  document.getElementById("tabs").innerHTML=[["hoje","Hoje"],["analises","Análises"],...Object.entries(AREAS).map(([a,A])=>[a,A.nome]),["cfg","⚙"]]
+    .map(([k,l])=>`<button class="tab${AREAS[k]&&!ativa(k)?" off":""}" role="tab" aria-selected="${aba===k}" data-aba="${k}">${l}${k==="hoje"&&pend?`<b>${pend}</b>`:""}</button>`).join("");
+  document.getElementById("main").innerHTML=aba==="hoje"?telaHoje():aba==="analises"?telaAnalises():aba==="cfg"?telaCfg():telaArea(aba);
   scrollTo(0,y);
 }
 document.getElementById("tabs").onclick=e=>{const b=e.target.closest("[data-aba]");if(!b)return;aba=b.dataset.aba;render();scrollTo(0,0);b.scrollIntoView({inline:"center",block:"nearest"});};
 
 function linha(T,acaoLi){
-  const s=situacao(T.id),a=acerto(T.id),h=h26(T.id),u=R(T.id).at(-1);
-  const sub=[u?`último ${fmt(u.d)}`:null,a?`${a.a}/${a.q} questões`:null,h?`2026: ${h.n}×${h.ac!=null?" · "+h.ac+"%":""}`:null].filter(Boolean).join(" · ");
-  const dir=acaoLi&&!estudado(T.id)?`<button class="mini go" data-li="${T.id}" aria-label="Marcar como estudado">✓</button>`:`<span class="tag ${s.k}">${s.txt}</span>`;
-  return `<div class="item clk" data-top="${T.id}"><span class="dot" style="background:${AREAS[T.area].cor}"></span><div class="tx"><div class="t1 full">${T.title}</div>${sub?`<div class="t2">${sub}</div>`:""}</div>${dir}</div>`;
+  const s=situacao(T.id),a=acerto(T.id),u=R(T.id).at(-1),nx=R(T.id).filter(r=>r.t==="x").length;
+  const sub=[u?`último ${fmt(u.d)}`:null,a?`${a.a}/${a.q} questões`:null,nx?`errou ${nx}×`:null].filter(Boolean).join(" · ");
+  const dir=acaoLi&&!estudado(T.id)&&ativa(T.area)?`<button class="mini go" data-li="${T.id}" aria-label="Marcar como estudado">✓</button>`:`<span class="tag ${s.k}">${s.txt}</span>`;
+  return `<div class="item clk" data-top="${T.id}"><span class="dot" style="background:${AREAS[T.area].cor}"></span><div class="tx"><div class="t1 full">${T.nome}</div>${T.curto&&norm(T.curto)!==norm(T.oficial)?`<div class="of">${T.oficial}</div>`:""}${sub?`<div class="t2">${sub}</div>`:""}</div>${dir}</div>`;
+}
+function escolherMaterias(titulo){
+  return `<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>${titulo}</h3></div><div class="pb"><div class="startcard">`+
+   Object.entries(AREAS).filter(([a])=>!ativa(a)).map(([a,A])=>`<button data-start="${a}"><i style="background:${A.cor}"></i>${A.nome}</button>`).join("")+`</div></div></div>`;
 }
 
 function telaHoje(){
   const dias=Math.max(0,dif(S.prova,hoje()));
-  const lidos=LEIT.filter(T=>estudado(T.id)).length,falta=LEIT.length-lidos;
-  const sem=Math.max(1,dif(S.fimLeitura,hoje())/7);const porSem=Math.ceil(falta/sem);
-  let h=`<div class="hero">
-    <span class="fase">${S.fase===1?"Fase 1 · leitura de tudo":"Fase 2 · revisões"}</span>
+  const as=Object.keys(AREAS).filter(ativa);
+  const L=LEIT.filter(T=>as.includes(T.area)),lidos=L.filter(T=>estudado(T.id)).length,falta=L.length-lidos;
+  const foraFalta=LEIT.filter(T=>!as.includes(T.area)).length;
+  const sem=Math.max(1,dif(S.fimLeitura,hoje())/7),porSem=Math.ceil((falta+foraFalta)/sem);
+  let h=`<div class="hero"><span class="fase">${S.fase===1?"Fase 1 · leitura de tudo":"Fase 2 · revisões"}</span>
     <div class="big num">${dias}<small> dias para a prova</small></div>
-    <div style="font-size:13.5px;opacity:.92;margin-top:6px">${S.fase===1?`${lidos} de ${LEIT.length} lidos · ${falta?`${porSem} por semana até ${fmt(S.fimLeitura)}`:"leitura completa"}`:`${LEIT.filter(T=>situacao(T.id).k==="ok").length} tópicos em dia`}</div>
-    ${S.h?`<div style="font-size:12.5px;opacity:.85;margin-top:8px">${ritmo2026()}</div>`:""}
-  </div>`;
-
-  if(S.fase===1){
-    h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>A seguir</h3><span class="sub">toque ✓ quando terminar</span></div>`+fila(4).map(T=>linha(T,true)).join("")+`</div>`;
-  }
-  if(revisando()){
-    const due=LEIT.map(T=>({T,s:situacao(T.id)})).filter(x=>["late","due"].includes(x.s.k)).sort((a,b)=>a.s.o-b.s.o);
-    h+=`<div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Revisar hoje</h3><span class="sub num">${due.length}</span></div>`+
-      (due.length?due.slice(0,6).map(x=>linha(x.T)).join("")+(due.length>6?`<div class="empty" style="padding:10px">+${due.length-6} depois desses</div>`:""):`<div class="empty">Tudo em dia.</div>`)+`</div>`;
-  }
+    <div style="font-size:13.5px;opacity:.92;margin-top:6px">${as.length?`${as.map(a=>AREAS[a].nome).join(" + ")}: ${lidos}/${L.length}`:"Nenhuma matéria começada"}${S.fase===1&&falta+foraFalta?` · ritmo: ${porSem}/semana até ${fmt(S.fimLeitura)}`:""}</div></div>`;
+  if(!as.length)return h+escolherMaterias("Por onde começar?");
+  if(S.fase===1&&falta)h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>A seguir</h3><span class="sub">✓ quando terminar</span></div>`+fila(4).map(T=>linha(T,true)).join("")+`</div>`;
+  else if(S.fase===1&&!falta&&foraFalta)h+=escolherMaterias("Matérias começadas em dia. Próxima?");
+  const due=TOP.filter(T=>vence(T.id)).map(T=>({T,s:situacao(T.id)})).sort((a,b)=>a.s.o-b.s.o);
   const ass=Object.entries(S.ass).filter(([k,a])=>a.prox&&a.prox<=hoje());
-  if(ass.length)h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Gramática para rever</h3></div>`+ass.map(([k,a])=>linhaAss(k,a)).join("")+`</div>`;
-
-  // solidez frente a 2026: só aparece quando já há base para comparar
-  const cmp=LEIT.map(T=>{const a=acerto(T.id),hh=h26(T.id);return a&&hh&&hh.ac!=null?a.p-hh.ac:null;}).filter(x=>x!=null);
-  if(cmp.length>=3){const up=cmp.filter(d=>d>=5).length,eq=cmp.filter(d=>d>-5&&d<5).length,dn=cmp.filter(d=>d<=-5).length;
-    h+=`<div class="panel" style="--hc:var(--mint)"><div class="panel-h"><h3>Solidez frente a 2026</h3><span class="sub">${cmp.length} tópicos com questões</span></div><div class="pb"><div class="solid3">
-    <div style="background:var(--mint-soft)"><b>${up}</b><span>mais sólidos</span></div><div style="background:var(--sunk)"><b>${eq}</b><span>iguais</span></div><div style="background:var(--danger-soft)"><b>${dn}</b><span>mais frágeis</span></div></div></div></div>`;}
+  if(due.length||ass.length||revisando())h+=`<div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Revisar hoje</h3><span class="sub num">${due.length+ass.length}</span></div>`+
+    (due.length?due.slice(0,6).map(x=>linha(x.T)).join(""):"")+ass.map(([k,a])=>linhaAss(k,a)).join("")+(!due.length&&!ass.length?`<div class="empty">Tudo em dia.</div>`:"")+(due.length>6?`<div class="empty" style="padding:10px">+${due.length-6} depois desses</div>`:"")+`</div>`;
   return h;
 }
 function linhaAss(k,a){const d=a.prox?dif(a.prox,hoje()):null;
@@ -395,80 +409,122 @@ function linhaAss(k,a){const d=a.prox?dif(a.prox,hoje()):null;
   <button class="mini" data-assok="${k}" aria-label="Revisei">✓</button><button class="mini" data-assdel="${k}" aria-label="Apagar">✕</button></div>`;}
 
 function telaArea(a){
-  const ts=TOP.filter(T=>T.area===a),l=ts.filter(T=>T.modo==="l"),lidos=l.filter(T=>estudado(T.id)).length;
-  let h=`<div class="panel" style="--hc:${AREAS[a].cor}"><div class="panel-h"><h3>${AREAS[a].nome}</h3><span class="sub num" style="margin-left:auto">${lidos}/${l.length} lidos</span></div>
-   <div class="pb"><div class="bar"><span style="width:${lidos/l.length*100}%;background:${AREAS[a].cor}"></span></div></div>`;
-  const gs=[...new Set(l.map(T=>T.g))];
-  gs.forEach(g=>{if(g)h+=`<div class="grp">${g}</div>`;h+=l.filter(T=>T.g===g).map(T=>linha(T,S.fase===1)).join("");});
-  if(a==="LP"){
-    const L=Object.entries(S.ass);
-    h+=`<div class="grp">Gramática · estudo por questões</div>`+ts.filter(T=>T.modo==="q").map(T=>linha(T)).join("")+
-      (L.length?L.map(([k,x])=>linhaAss(k,x)).join(""):`<div class="empty" style="padding:12px">Lance erros escrevendo “errei regência” na barra de cima.</div>`);
-  }
+  const ts=TOP.filter(T=>T.area===a),l=ts.filter(T=>T.modo==="l"),lidos=l.filter(T=>estudado(T.id)).length,on=ativa(a);
+  let h=on?"":`<div class="banner">Pausada: não aparece no Hoje nem cobra revisões.<button data-start="${a}">Começar ${AREAS[a].nome}</button></div>`;
+  h+=`<div class="panel${on?"":" paused"}" style="--hc:${AREAS[a].cor}"><div class="panel-h"><h3>${AREAS[a].nome}</h3><span class="sub num" style="margin-left:auto">${lidos}/${l.length}</span>${on?`<button class="act" data-pausar="${a}">Pausar</button>`:""}</div>
+   <div class="pb"><div class="bar"><span style="width:${l.length?lidos/l.length*100:0}%;background:${AREAS[a].cor}"></span></div></div>`;
+  const gs=[...new Set(ts.map(T=>T.g))];
+  gs.forEach(g=>{if(g)h+=`<div class="grp">${g}</div>`;h+=ts.filter(T=>T.g===g).map(T=>linha(T,S.fase===1&&T.modo==="l")).join("");});
+  if(a==="LP"&&Object.keys(S.ass).length)h+=`<div class="grp">Outros erros lançados</div>`+Object.entries(S.ass).map(([k,x])=>linhaAss(k,x)).join("");
   return h+`</div>`;
 }
 
+/* ── ANÁLISES: o painel da aprovação ── */
+function diasEstudo(){const s=new Set();Object.values(S.top).forEach(t=>t.reg.forEach(r=>s.add(r.d)));Object.values(S.ass).forEach(a=>a.erros.forEach(d=>s.add(d)));S.sims.forEach(x=>s.add(x.d));return s;}
+function seqs(ds){let atual=0,d=hoje();if(!ds.has(d))d=addDias(-1);while(ds.has(d)){atual++;d=addDias(-1,d);}
+  let melhor=0,c=0,prev=null;[...ds].sort().forEach(x=>{c=prev&&dif(x,prev)===1?c+1:1;melhor=Math.max(melhor,c);prev=x;});return {atual,melhor};}
+function telaAnalises(){
+  const ds=diasEstudo(),sq=seqs(ds),lidos=LEIT.filter(T=>estudado(T.id)).length,ac=acerto(TOP.map(T=>T.id));
+  let h=`<div class="kpis">
+   <div class="kpi"><b>${Math.max(0,dif(S.prova,hoje()))}</b><span>dias para a prova</span></div>
+   <div class="kpi"><b>${Math.round(lidos/LEIT.length*100)}%</b><span>do edital lido (${lidos}/${LEIT.length})</span></div>
+   <div class="kpi"><b>${ac?ac.q:0}</b><span>questões · ${ac?ac.p+"% de acerto":"nenhuma ainda"}</span></div>
+   <div class="kpi"><b>${ds.size}</b><span>dias de estudo · sequência ${sq.atual} (melhor ${sq.melhor})</span></div></div>`;
+  // atividade
+  const ini=addDias(-55);const cnt={};Object.values(S.top).forEach(t=>t.reg.forEach(r=>{cnt[r.d]=(cnt[r.d]||0)+1;}));
+  let cel="";for(let i=0;i<56;i++){const d=addDias(i,ini),n=cnt[d]||0;cel+=`<i class="${n>=5?"l3":n>=3?"l2":n?"l1":""}${d===hoje()?" hj":""}" title="${fmt(d)}: ${n}"></i>`;}
+  // a grade vai por colunas = semanas
+  h+=`<div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Últimas 8 semanas</h3><span class="sub">cada quadrado é um dia</span></div><div class="pb"><div class="heat">${cel}</div></div></div>`;
+  // por matéria
+  h+=`<div class="panel" style="--hc:var(--violet)"><div class="panel-h"><h3>Por matéria</h3></div>`+Object.entries(AREAS).map(([a,A])=>{
+    const l=LEIT.filter(T=>T.area===a),li=l.filter(T=>estudado(T.id)).length,x=acerto(TOP.filter(T=>T.area===a).map(T=>T.id));
+    return `<div class="mrow" data-aba-ir="${a}" style="cursor:pointer"><div style="font-weight:700;font-size:14px">${A.nome} ${ativa(a)?"":`<span class="tag new">pausada</span>`}</div>
+      <div class="sub num">${li}/${l.length} · ${x?`${x.p}% em ${x.q}q`:"sem questões"}</div><div class="bar"><span style="width:${l.length?li/l.length*100:0}%;background:${A.cor}"></span></div></div>`;}).join("")+`</div>`;
+  // pontos fracos
+  const fr=TOP.map(T=>({T,a:acerto(T.id),x:R(T.id).filter(r=>r.t==="x").length})).filter(o=>(o.a&&o.a.q>=5)||o.x).sort((p,q)=>((p.a?p.a.p:50)-p.x*8)-((q.a?q.a.p:50)-q.x*8)).slice(0,5);
+  h+=`<div class="panel" style="--hc:var(--danger)"><div class="panel-h"><h3>Pontos fracos</h3><span class="sub">onde mais erra</span></div>`+
+   (fr.length?fr.map(o=>`<div class="item clk" data-top="${o.T.id}"><span class="dot" style="background:${AREAS[o.T.area].cor}"></span><div class="tx"><div class="t1">${rot(o.T)}</div><div class="t2">${[o.a?`${o.a.p}% em ${o.a.q} questões`:null,o.x?`errou ${o.x}×`:null].filter(Boolean).join(" · ")}</div></div></div>`).join(""):`<div class="empty">Aparece quando você lançar questões.</div>`)+`</div>`;
+  // simulados
+  const sims=S.sims.slice().reverse();
+  h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Simulados e provas anteriores</h3><button class="act" data-acao="novoSim">+ Lançar</button></div>`+
+   (sims.length?sims.map((x,i)=>{const p=Math.round(x.a/x.q*100),ant=sims[i+1],dp=ant?p-Math.round(ant.a/ant.q*100):null;
+     return `<div class="item"><div class="tx"><div class="t1">${esc(x.nome)}</div><div class="t2">${fmt(x.d)} · ${x.a}/${x.q}${dp!=null?` · ${dp>=0?"+":""}${dp} pts`:""}</div></div><span class="tag ${p>=80?"ok":p>=65?"due":"late"}">${p}%</span><button class="mini" data-simdel="${S.sims.length-1-i}" aria-label="Apagar">✕</button></div>`;}).join(""):`<div class="empty">Faça uma prova anterior completa por mês e lance aqui para ver sua nota subir.</div>`)+`</div>`;
+  // 2026 só aqui, recolhido
+  if(S.h){const H=S.h;const cmp=TOP.map(T=>{const a=acerto(T.id),hh=h26(T.id);return a&&hh&&hh.ac!=null?a.p-hh.ac:null;}).filter(x=>x!=null);
+    const up=cmp.filter(d=>d>=5).length,eq=cmp.filter(d=>d>-5&&d<5).length,dn=cmp.filter(d=>d<=-5).length;
+    h+=`<details class="box"><summary>Comparar com 2026</summary><div class="pb">
+     <div class="solid3" style="margin-bottom:12px"><div style="background:var(--sunk)"><b>${ds.size}</b><span>dias em 2027</span></div><div style="background:var(--sunk)"><b>${H.dias.length}</b><span>dias em 2026</span></div><div style="background:var(--sunk)"><b>${H.revs}</b><span>registros 2026</span></div></div>
+     <div class="lab">Blocos de questões · 2027 × 2026</div>${Object.entries(AREAS).map(([a,A])=>{const n=TOP.filter(T=>T.area===a).reduce((s,T)=>s+R(T.id).filter(r=>r.t==="q").length,0);return `<div class="hist"><span class="k">${A.nome}</span><span class="sub num">${n} × ${H.qArea[a]||0}</span></div>`;}).join("")}<div style="height:12px"></div>${cmp.length?`<div class="lab" style="margin-top:0">Tópicos com questões nos dois anos</div><div class="solid3"><div style="background:var(--mint-soft)"><b>${up}</b><span>mais sólidos</span></div><div style="background:var(--sunk)"><b>${eq}</b><span>iguais</span></div><div style="background:var(--danger-soft)"><b>${dn}</b><span>mais frágeis</span></div></div>`:`<div class="sub">A comparação de acertos aparece quando você lançar questões dos mesmos tópicos.</div>`}
+     <a class="btn-line" style="margin-top:12px" href="2026.html">Abrir o site de 2026</a></div></details>`;}
+  return h;
+}
+
 function telaCfg(){
-  const H=S.h;
   return `<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Datas</h3></div><div class="pb">
     <div class="field"><label class="sub">Prova (ajuste quando sair o edital)</label><input type="date" data-cfg="prova" value="${S.prova}"></div>
     <div class="field"><label class="sub">Terminar a 1ª leitura até</label><input type="date" data-cfg="fimLeitura" value="${S.fimLeitura}"></div></div></div>
   <div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Fase</h3></div><div class="pb">
-    <label class="sw"><input type="checkbox" data-cfg="revNaLeitura" ${S.revNaLeitura?"checked":""}> Mostrar revisões já durante a 1ª leitura</label>
+    <label class="sw"><input type="checkbox" data-cfg="revNaLeitura" ${S.revNaLeitura?"checked":""}> Cobrar revisões já durante a 1ª leitura</label>
     <button class="btn" data-acao="fase">${S.fase===1?"Começar a fase de revisões agora":"Voltar para a 1ª leitura"}</button></div></div>
-  ${H?`<div class="panel trophy" style="--hc:var(--amber)"><div class="panel-h"><h3>Temporada 2026</h3><span class="sub">guardada, só leitura</span></div><div class="pb"><div class="g">
-    <div><b>${H.revs}</b><span>revisões</span></div><div><b>${H.dias.length}</b><span>dias de estudo</span></div>
-    <div><b>${Object.values(H.qArea).reduce((a,b)=>a+b,0)}</b><span>blocos de questões</span></div><div><b>${Object.keys(H.t).length}</b><span>tópicos vistos</span></div></div>
-    <a class="btn-line" style="margin-top:10px" href="2026.html">Abrir o site de 2026</a></div></div>`:""}
   <div class="panel" style="--hc:var(--mint)"><div class="panel-h"><h3>Mais</h3></div><div class="pb" style="display:grid;gap:8px">
     <button class="btn" data-acao="backup">Baixar cópia de segurança</button>
     <button class="btn" data-acao="instalar">Instalar como app</button>
     <div class="sub" style="text-align:center">Salva sozinho no aparelho e na nuvem · versão ${VERSAO}</div></div></div>`;
 }
 
-/* ── folha do tópico ── */
+/* ── folhas ── */
 function abrirFolha(html){const L=document.getElementById("layer");L.querySelector(".sheet").innerHTML=`<div class="grab"></div><button class="ico x" data-fechar>✕</button>`+html;L.classList.add("on");}
 function fecharFolha(){document.getElementById("layer").classList.remove("on");}
 document.querySelector("#layer .back").onclick=fecharFolha;
 let nq=10,na=8;
-function folha(id){
-  const T=BYID[id],h=h26(id),a=acerto(id),L=R(id).slice().reverse();
-  abrirFolha(`<h2>${T.title}</h2><div class="meta">${AREAS[T.area].nome}${T.g?" · "+T.g:""}</div>
-  ${h?`<div class="cmp">2026: ${h.n} revisões${h.ac!=null?` · média ${h.ac}%`:""}${a&&h.ac!=null?` · agora ${a.p}%`:""}</div>`:""}
-  ${T.modo==="l"?`<button class="btn tang" data-li="${id}">📖 ${estudado(id)?"Estudei de novo":"Estudei"}</button>`:`<div class="cmp">Obra de consulta: estude por questões e lance os erros por assunto.</div>`}
-  <div class="lab">Questões</div>
-  <div class="nrow">
+function caixas(){return `<div class="nrow">
     <div class="nbox"><label>Fiz</label><div><button data-n="q" data-d="-1">−</button><input id="nq" type="number" inputmode="numeric" value="${nq}"><button data-n="q" data-d="1">+</button></div></div>
-    <div class="nbox"><label>Acertei</label><div><button data-n="a" data-d="-1">−</button><input id="na" type="number" inputmode="numeric" value="${na}"><button data-n="a" data-d="1">+</button></div></div>
-  </div>
+    <div class="nbox"><label>Acertei</label><div><button data-n="a" data-d="-1">−</button><input id="na" type="number" inputmode="numeric" value="${na}"><button data-n="a" data-d="1">+</button></div></div></div>`;}
+function folha(id){
+  const T=BYID[id],h=h26(id),L=R(id).slice().reverse();
+  abrirFolha(`<h2>${T.nome}</h2><div class="meta">${T.curto&&norm(T.curto)!==norm(T.oficial)?T.oficial+"<br>":""}${AREAS[T.area].nome}${T.g?" · "+T.g:""}</div>
+  ${T.modo==="l"?`<button class="btn tang" data-li="${id}">📖 ${estudado(id)?"Estudei de novo":"Estudei"}</button>`
+   :`<div class="two"><button class="btn" data-rv="${id}" data-t="r">↻ Revisei</button><button class="btn tang" data-rv="${id}" data-t="x">✕ Errei</button></div>`}
+  <div class="lab">Questões</div>${caixas()}
   <button class="btn solid" style="margin-top:8px" data-salvarq="${id}">Salvar questões</button>
   <div class="lab">Anotações</div>
   <textarea class="note" data-nota="${id}" placeholder="Distinções, pegadinhas…">${esc(S.notas[id]||"")}</textarea>
-  ${L.length?`<div class="lab">Histórico 2027</div>`+L.map((r,i)=>`<div class="hist"><span class="d">${fmt(r.d)}</span><span class="k">${r.t==="q"?`✏️ ${r.a}/${r.q}`:"📖 estudo"}</span><button data-del="${id}" data-i="${L.length-1-i}" aria-label="Apagar">✕</button></div>`).join(""):""}`);
+  ${L.length?`<div class="lab">Histórico</div>`+L.map((r,i)=>`<div class="hist"><span class="d">${fmt(r.d)}</span><span class="k">${r.t==="q"?`✏️ ${r.a}/${r.q}`:r.t==="x"?"✕ errei":r.t==="r"?"↻ revisei":"📖 estudo"}</span><button data-del="${id}" data-i="${L.length-1-i}" aria-label="Apagar">✕</button></div>`).join(""):""}
+  ${h?`<details class="sm"><summary>Ver 2026</summary><div class="sub">${h.n} registros${h.ac!=null?` · média ${h.ac}% (${h.acs.join("%, ")}%)`:""}</div></details>`:""}`);
 }
-const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+function folhaSim(){abrirFolha(`<h2>Lançar simulado</h2><div class="meta">Prova anterior ou simulado completo.</div>
+  <div class="field"><input id="simNome" placeholder="Ex.: EsFCEx 2024 completa"></div>${caixas()}
+  <button class="btn solid" style="margin-top:10px" data-salvarsim>Salvar</button>`);document.getElementById("nq").value=60;document.getElementById("na").value=45;}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
 
 /* ── cliques ── */
 document.addEventListener("click",e=>{
   const g=k=>e.target.closest(`[data-${k}]`);let b;
   if(g("fechar"))return fecharFolha();
-  if(b=g("li")){e.stopPropagation();const id=b.dataset.li;const aberta=document.getElementById("layer").classList.contains("on");mudar(()=>registrar(id,{t:"e"}));if(aberta)fecharFolha();return;}
+  if(b=g("start")){const a=b.dataset.start;return mudar(()=>{S.ativas[a]=hoje();return `${AREAS[a].nome} começada`;});}
+  if(b=g("pausar")){const a=b.dataset.pausar;return mudar(()=>{delete S.ativas[a];return `${AREAS[a].nome} pausada`;});}
+  if(b=g("li")){e.stopPropagation();const id=b.dataset.li;const ab=document.getElementById("layer").classList.contains("on");mudar(()=>registrar(id,{t:"e"}));if(ab)fecharFolha();return;}
+  if(b=g("rv")){const id=b.dataset.rv;mudar(()=>registrar(id,{t:b.dataset.t}));fecharFolha();return;}
   if(b=g("n")){const k=b.dataset.n;const el=document.getElementById("n"+k);let v=Math.max(0,(+el.value||0)+ +b.dataset.d);
     if(k==="a")v=Math.min(v,+document.getElementById("nq").value||0);el.value=v;if(k==="q"&&+document.getElementById("na").value>v)document.getElementById("na").value=v;return;}
   if(b=g("salvarq")){const q=+document.getElementById("nq").value||0,a=Math.min(+document.getElementById("na").value||0,q);
     if(!q)return toast("Coloque quantas questões fez.");nq=q;na=a;const id=b.dataset.salvarq;mudar(()=>registrar(id,{t:"q",q,a}));fecharFolha();return;}
+  if(g("salvarsim")){const q=+document.getElementById("nq").value||0,a=Math.min(+document.getElementById("na").value||0,q),nome=document.getElementById("simNome").value.trim()||"Simulado";
+    if(!q)return toast("Coloque quantas questões tinha.");mudar(()=>{S.sims.push({d:hoje(),nome,q,a});return `${nome}: ${Math.round(a/q*100)}%`;});fecharFolha();return;}
+  if(b=g("simdel"))return mudar(()=>{S.sims.splice(+b.dataset.simdel,1);},"Apagado");
   if(b=g("del")){const id=b.dataset.del;mudar(()=>{S.top[id].reg.splice(+b.dataset.i,1);},"Apagado");folha(id);return;}
   if(b=g("top"))return folha(b.dataset.top);
+  if(b=g("aba-ir")){aba=b.dataset.abaIr;render();return scrollTo(0,0);}
   if(b=g("assok")){const k=b.dataset.assok,nx={1:3,3:7,7:15};return mudar(()=>{const a=S.ass[k];a.iv=nx[a.iv]||null;a.prox=a.iv?addDias(a.iv):null;return a.iv?`${k}: volta em ${a.iv} dias`:`${k}: dominado ✓`;});}
   if(b=g("assdel"))return mudar(()=>{delete S.ass[b.dataset.assdel];},"Apagado");
   if(b=g("acao")){const a=b.dataset.acao;
+    if(a==="novoSim")return folhaSim();
     if(a==="fase")return mudar(()=>{S.fase=S.fase===1?2:1;return S.fase===2?"Fase de revisões ligada":"De volta à 1ª leitura";});
     if(a==="backup"){const u=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:"application/json"}));const l=document.createElement("a");l.href=u;l.download=`estudos-${hoje()}.json`;l.click();URL.revokeObjectURL(u);return;}
     if(a==="instalar")return instalar();}
 });
 document.addEventListener("input",e=>{const t=e.target;
   if(t.dataset.nota!==undefined){S.notas[t.dataset.nota]=t.value;if(!t.value)delete S.notas[t.dataset.nota];salvar();}
-  if(t.id==="nq"||t.id==="na"){/* digitação livre */}
   if(t.dataset.cfg&&t.type==="date"&&t.value){S[t.dataset.cfg]=t.value;salvar();}});
 document.addEventListener("change",e=>{const t=e.target;if(t.dataset.cfg==="revNaLeitura"){S.revNaLeitura=t.checked;salvar();render();}});
 

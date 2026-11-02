@@ -162,6 +162,26 @@ textarea.note:focus{border-color:var(--blue)}
 .tab.cfg{margin-left:auto}
 .sw{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px}
 .sw input{width:22px;height:22px;accent-color:var(--blue)}
+.of{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+.paused{opacity:.55}
+.tab.off{opacity:.5}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.kpi b{display:block;font-family:var(--f-num);font-size:24px;font-weight:700}
+.kpi span{font-size:12px;color:var(--muted)}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,16px);grid-auto-columns:1fr;gap:4px}
+.heat i{border-radius:4px;background:var(--sunk)}
+.heat i.l1{background:var(--blue-soft)}.heat i.l2{background:color-mix(in srgb,var(--blue) 55%,var(--blue-soft))}.heat i.l3{background:var(--blue)}
+.heat i.hj{outline:2px solid var(--tang);outline-offset:1px}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 14px;border-top:1px solid var(--line);align-items:center}
+.mrow .bar{grid-column:1/-1}
+details.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:14px}
+details.box summary{padding:14px;font-weight:700;font-size:15px;cursor:pointer;list-style:none}
+details.box summary::after{content:" ▾";color:var(--muted)}
+details.sm summary{font-size:13px;color:var(--blue);font-weight:600;cursor:pointer;padding:10px 0}
+.startcard{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.startcard button{min-height:56px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font-weight:700;display:flex;align-items:center;gap:8px;padding:0 12px}
+.startcard i{width:10px;height:10px;border-radius:3px}
 </style>
 </head>
 <body>
@@ -174,7 +194,7 @@ textarea.note:focus{border-color:var(--blue)}
   </div>
   <div class="tabs" role="tablist" id="tabs"></div>
   <div class="quick">
-    <input id="q" placeholder="estudei boto · koch 8/10 · errei crase" autocomplete="off" enterkeyhint="send">
+    <input id="q" placeholder="estudei capitanias · koch 8/10 · errei crase" autocomplete="off" enterkeyhint="send">
     <button id="qGo" disabled>Lançar</button>
   </div>
   <div class="pills" id="pills"></div>
@@ -183,25 +203,27 @@ textarea.note:focus{border-color:var(--blue)}
 <div id="layer"><div class="back"></div><div class="sheet"></div></div>
 
 <script>
-const VERSAO = "02/11 17:30";
+const VERSAO = "02/11 19:00";
 const FB_V = "12.19.0";
-/* banco da temporada 2026 (o mesmo do site antigo). 2026 fica em usuarios/principal e só é LIDO. */
+/* banco do site antigo. 2026 fica em usuarios/principal e só é LIDO; 2027 em usuarios/temporada2027 */
 const FB_CFG = {apiKey:"AIzaSyBA3rElhXMxQpBqnLk9kQwYq1kUobDppUU",authDomain:"revisao-esfcex.firebaseapp.com",projectId:"revisao-esfcex",storageBucket:"revisao-esfcex.firebasestorage.app",messagingSenderId:"751976254334",appId:"1:751976254334:web:c2ce5b16ac7ba972e8c12f"};
 const DOC_2026 = ["usuarios","principal"], DOC_2027 = ["usuarios","temporada2027"];
 const LS = "estudos2027";
 
+/* [id, matéria, grupo, nome oficial (edital), nome curto, modo] — modo "q" = estuda por questões, sem leitura */
 const RAW = /*TOPICOS*/;
-const POR_QUESTOES = ["lp1","lp4","lp6","lp7"];
-const CHAVES = {lp1:"napoleao",lp2:"antunes",lp3:"bakhtin",lp4:"bechara",lp5:"bncc",lp6:"manual",lp7:"aurelio",lp8:"koch",lp9:"marcuschi",lp10:"marquesi pauliukonis",lp11:"nilce estilistica",lp12:"neves",lp13:"dolz schneuwly",
+const CHAVES = {lp1:"napoleao vernaculas",lp4:"bechara",lp6:"manual redacao",lp7:"aurelio dicionario",lp14:"koch compreender",lp8:"koch escrever",lp9:"marcuschi",lp11:"nilce martins",lp2:"antunes",lp3:"bakhtin",lp5:"bncc lp",lp10:"marquesi pauliukonis",lp12:"neves",lp13:"dolz schneuwly",
+  lpa1:"interpretacao compreensao",lpa2:"sinonimos antonimos paronimos hiperonimos significacao",lpa3:"tipos generos",lpa4:"estilistica",lpa5:"ortografia",lpa6:"acentuacao acento",lpa7:"coesao referenciacao sequenciacao",lpa8:"coerencia",lpa9:"verbos verbal tempos modos",lpa10:"morfossintaxe morfossintatica periodo simples",lpa11:"coordenacao coordenadas",lpa12:"subordinacao subordinadas",lpa13:"pontuacao virgula",lpa14:"concordancia",lpa15:"regencia",lpa16:"crase",lpa17:"colocacao pronominal pronomes proclise enclise mesoclise",
   ped2:"valente",ped23:"roberto",ped24:"tomaz",ped20:"gestao democratica",ped21:"wildson",ped12:"la taille piaget vygotsky wallon",ped18:"rojo multiletramentos",ped25:"soares",ped29:"zabala",
   leg1:"cf constituicao",leg2:"eca",leg3:"ldb",leg4:"04/2010",leg5:"07/2010",leg6:"conselhos",leg7:"direitos humanos",leg8:"aee",leg9:"inclusiva",leg10:"bncc2017",leg11:"telas"};
 const AREAS = {LP:{nome:"Português",cor:"var(--blue)"},PED:{nome:"Pedagogia",cor:"var(--violet)"},LEG:{nome:"Legislação",cor:"var(--pink)"},HIS:{nome:"História",cor:"var(--amber)"},GEO:{nome:"Geografia",cor:"var(--mint)"}};
 const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
-const TOP = RAW.map(([id,area,g,title])=>({id,area,g,title,modo:POR_QUESTOES.includes(id)?"q":"l",
-  chaves:norm((CHAVES[id]||"")+" "+title.replace(/\(.*?\)/g," ")).split(/[^a-z0-9/]+/).filter(w=>w.length>=3)}));
+const TOP = RAW.map(([id,area,g,oficial,curto,modo])=>({id,area,g,oficial,curto,modo,
+  nome:curto||oficial,
+  chaves:norm((CHAVES[id]||"")+" "+curto+" "+oficial.replace(/\(.*?\)/g," ")).split(/[^a-z0-9/]+/).filter(w=>w.length>=3)}));
 const BYID = Object.fromEntries(TOP.map(t=>[t.id,t]));
 const LEIT = TOP.filter(T=>T.modo==="l");
-const rotulo = T => { const a=T.title.split(" — ")[0].replace(/\s*\(.*$/,""); return a.length>34?a.slice(0,32)+"…":a; };
+const rot = T => { const a=(T.curto||T.oficial).split(" — ")[0].replace(/^[a-z0-9]+\.\s*/i,""); return a.length>40?a.slice(0,38)+"…":a; };
 
 /* ── datas ── */
 function iso(d){const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10);}
@@ -211,20 +233,24 @@ function dif(a,b){return Math.round((new Date(a+"T12:00")-new Date(b+"T12:00"))/
 const fmt=d=>d?d.slice(8,10)+"/"+d.slice(5,7):"—";
 
 /* ── estado ── */
-function novo(){return {ts:0,prova:"2027-08-01",fimLeitura:"2027-01-31",fase:1,revNaLeitura:false,top:{},notas:{},ass:{},h:null,notasImportadas:false};}
+function novo(){return {ts:0,prova:"2027-08-01",fimLeitura:"2027-01-31",fase:1,revNaLeitura:false,ativas:{},top:{},notas:{},ass:{},sims:[],h:null,notasImportadas:false};}
+function ajustar(x){x=Object.assign(novo(),x||{});if(x.fimLeitura==="2027-03-31")x.fimLeitura="2027-01-31";if(!x.ativas)x.ativas={};if(!x.sims)x.sims=[];return x;}
 let S; try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
-S=Object.assign(novo(),S||{});if(S.fimLeitura==="2027-03-31")S.fimLeitura="2027-01-31";
+S=ajustar(S);
+const ativa=a=>!!S.ativas[a];
 const R=id=>S.top[id]?.reg||[];
 const reg=id=>(S.top[id]||(S.top[id]={reg:[]})).reg;
 const estudado=id=>R(id).some(r=>r.t==="e");
-function acerto(id){let q=0,a=0;R(id).forEach(r=>{if(r.t==="q"){q+=r.q;a+=r.a;}});return q?{q,a,p:Math.round(a/q*100)}:null;}
+function acerto(ids){let q=0,a=0;[].concat(ids).forEach(id=>R(id).forEach(r=>{if(r.t==="q"){q+=r.q;a+=r.a;}}));return q?{q,a,p:Math.round(a/q*100)}:null;}
 const h26=id=>S.h?.t?.[id];
 
-/* ── revisão espaçada (vale na fase 2, ou na 1 se ligado em Ajustes) ── */
+/* ── revisão espaçada ── */
 function agenda(id){
   let iv=0,prox=null;
   R(id).forEach(r=>{
     if(r.t==="e")iv=iv?Math.min(60,Math.round(iv*1.5)):7;
+    else if(r.t==="r")iv=iv?Math.min(60,Math.round(iv*2)):3;
+    else if(r.t==="x")iv=1;
     else{const p=r.a/r.q;iv=p>=.85?Math.min(60,Math.round(Math.max(iv,3)*2.3)):p>=.7?Math.min(30,Math.round(Math.max(iv,3)*1.4)):2;}
     prox=addDias(iv,r.d);
   });
@@ -233,27 +259,26 @@ function agenda(id){
 const revisando=()=>S.fase===2||S.revNaLeitura;
 function situacao(id){
   const T=BYID[id];
-  if(T.modo==="q")return {k:"cons",txt:"por questões",o:900};
-  if(!estudado(id))return {k:"new",txt:"não lido",o:500};
-  if(!revisando()){const a=acerto(id);return {k:"ok",txt:a?`${a.p}%`:"lido",o:600};}
+  if(T.modo==="q"){if(!R(id).length)return {k:"cons",txt:"por questões",o:900};}
+  else{if(!estudado(id))return {k:"new",txt:T.area==="HIS"||T.area==="GEO"?"não estudado":"não lido",o:500};
+    if(!revisando()){const a=acerto(id);return {k:"ok",txt:a?`${a.p}%`:"estudado ✓",o:600};}}
   const d=dif(agenda(id),hoje());
   if(d<0)return {k:"late",txt:`atrasado ${-d}d`,o:d};
   if(d===0)return {k:"due",txt:"revisar hoje",o:0};
   return {k:"ok",txt:d===1?"amanhã":`em ${d}d`,o:100+d};
 }
+const vence=id=>{const k=situacao(id).k;return (k==="late"||k==="due")&&ativa(BYID[id].area)&&(BYID[id].modo==="q"||revisando());};
 
-/* ── ordem da 1ª leitura: intercala matérias, puxa primeiro o que foi mais fraco em 2026 ── */
+/* ── fila da 1ª leitura: só matérias começadas; intercala e puxa primeiro o mais fraco de 2026 ── */
 const PESO={PED:3,LEG:2,LP:2,HIS:1.5,GEO:1.2};
 function fraqueza(id){const h=h26(id);if(!h)return 50;return (h.ac==null?60:100-h.ac)+(h.n<3?10:0);}
+function ordemArea(a){return LEIT.filter(T=>T.area===a&&!estudado(T.id)).sort((x,y)=>(T=>T.area==="HIS"||T.area==="GEO")(x)?0:fraqueza(y.id)-fraqueza(x.id));}
 function fila(n){
-  const feitos={},tot={};LEIT.forEach(T=>{tot[T.area]=(tot[T.area]||0)+1;feitos[T.area]=(feitos[T.area]||0)+(estudado(T.id)?1:0);});
-  const rest=Object.fromEntries(Object.keys(AREAS).map(a=>[a,LEIT.filter(T=>T.area===a&&!estudado(T.id)).sort((x,y)=>fraqueza(y.id)-fraqueza(x.id))]));
+  const as=Object.keys(AREAS).filter(ativa);const feitos={},tot={},rest={};
+  as.forEach(a=>{const l=LEIT.filter(T=>T.area===a);tot[a]=l.length;feitos[a]=l.filter(T=>estudado(T.id)).length;rest[a]=ordemArea(a);});
   const out=[];
-  while(out.length<n){
-    let best=null,bv=1e9;
-    for(const a in rest){if(!rest[a].length)continue;const v=feitos[a]/tot[a]/PESO[a];if(v<bv){bv=v;best=a;}}
-    if(!best)break;out.push(rest[best].shift());feitos[best]++;
-  }
+  while(out.length<n){let best=null,bv=1e9;for(const a of as){if(!rest[a].length)continue;const v=feitos[a]/tot[a]/PESO[a];if(v<bv){bv=v;best=a;}}
+    if(!best)break;out.push(rest[best].shift());feitos[best]++;}
   return out;
 }
 
@@ -262,34 +287,28 @@ let fb=null,syncT=null;
 function setSync(t,err){const e=document.getElementById("sync");e.textContent=t;e.classList.toggle("err",!!err);}
 function salvar(){S.ts=Date.now();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}clearTimeout(syncT);setSync("salvando…");syncT=setTimeout(subir,700);}
 const prazo=(p,ms=10000)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("prazo")),ms))]);
-async function nuvem(){
-  if(fb)return fb;
+async function nuvem(){if(fb)return fb;
   const [A,F]=await Promise.all(["app","firestore"].map(m=>import(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-${m}.js`)));
-  const app=A.initializeApp(FB_CFG,"estudos2027");fb={F,db:F.getFirestore(app)};return fb;
-}
+  fb={F,db:F.getFirestore(A.initializeApp(FB_CFG,"estudos2027"))};return fb;}
 async function subir(){try{const f=await prazo(nuvem());await prazo(f.F.setDoc(f.F.doc(f.db,...DOC_2027),JSON.parse(JSON.stringify(S))));setSync("salvo");}catch(e){setSync("sem internet · salvo no aparelho",true);}}
 async function baixar(){
-  try{
-    const f=await prazo(nuvem());
+  try{const f=await prazo(nuvem());
     const sn=await prazo(f.F.getDoc(f.F.doc(f.db,...DOC_2027)));
-    if(sn.exists()&&(sn.data().ts||0)>(S.ts||0)){S=Object.assign(novo(),sn.data());if(S.fimLeitura==="2027-03-31")S.fimLeitura="2027-01-31";try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+    if(sn.exists()&&(sn.data().ts||0)>(S.ts||0)){S=ajustar(sn.data());try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
     else if(S.ts&&!sn.exists())subir();
     if(!S.h){const v=await prazo(f.F.getDoc(f.F.doc(f.db,...DOC_2026)));if(v.exists()){resumir2026(v.data());salvar();}}
     setSync("salvo");render();
   }catch(e){setSync("sem internet · salvo no aparelho",true);}
 }
-/* lê 2026 sem alterar nada lá: vira um resumo usado para ordem, comparação e anotações */
 function isoV(d){if(!d)return null;return d.includes("/")?d.split("/").reverse().join("-"):d.slice(0,10);}
 function resumir2026(D){
-  const H={t:{},dias:[],vistosPorDia:[],qArea:{},revs:0};const prim={};const dias=new Set();
+  const H={t:{},dias:[],qArea:{},revs:0};const dias=new Set();
   Object.entries(D.state||{}).forEach(([id,s])=>{const E=s.entries||[];if(!E.length||!BYID[id])return;
     const qs=E.filter(e=>e.tipo==="questoes"&&e.acerto!=null).map(e=>+e.acerto);
     H.t[id]={n:E.length,ac:qs.length?Math.round(qs.reduce((a,b)=>a+b,0)/qs.length):null,acs:qs};
     H.revs+=E.length;H.qArea[BYID[id].area]=(H.qArea[BYID[id].area]||0)+qs.length;
-    E.forEach(e=>{const d=isoV(e.date);if(d){dias.add(d);if(!prim[id]||d<prim[id])prim[id]=d;}});});
-  H.dias=[...dias].sort();
-  H.vistosPorDia=H.dias.map(d=>Object.values(prim).filter(p=>p<=d).length);
-  S.h=H;
+    E.forEach(e=>{const d=isoV(e.date);if(d)dias.add(d);});});
+  H.dias=[...dias].sort();S.h=H;
   if(!S.notasImportadas){Object.entries(D.notes||{}).forEach(([id,n])=>{if(n&&!S.notas[id])S.notas[id]=n;});S.notasImportadas=true;}
 }
 
@@ -302,92 +321,87 @@ function toast(msg,desf,ms){document.querySelector(".toast")?.remove();clearTime
 function mudar(fn,msg){const antes=JSON.stringify(S);const extra=fn();salvar();render();
   if(msg!==null)toast(extra||msg||"Feito",()=>{S=JSON.parse(antes);salvar();render();});}
 
-/* ── momentos 2026 ── */
+/* ── 2026 só em momentos pontuais ── */
 function cmp2026(id,p){const h=h26(id);if(!h||h.ac==null)return "";const d=p-h.ac;
-  return d>=5?` · ${d} pts acima de 2026 💪`:d<=-5?` · ${-d} pts abaixo de 2026 ⚠️`:" · mesmo nível de 2026";}
-function marcoQuestoes(area){const h=S.h?.qArea?.[area];if(!h)return "";
-  const n=LEIT.concat(TOP).filter((T,i,a)=>a.indexOf(T)===i&&T.area===area).reduce((s,T)=>s+R(T.id).filter(r=>r.t==="q").length,0);
-  return n===h+1?` · já são mais blocos de questões de ${AREAS[area].nome} que em 2026 inteiro 🏅`:"";}
-function diasEstudo(){const s=new Set();Object.values(S.top).forEach(t=>t.reg.forEach(r=>s.add(r.d)));return [...s].sort();}
-function ritmo2026(){const H=S.h;if(!H)return "";const d=diasEstudo().length,n=H.dias.length;
-  if(!d)return `Em 2026 foram ${n} dias de estudo. Esta temporada começa hoje.`;
-  return d>n?`Já são ${d} dias de estudo — mais que os ${n} de 2026 inteiro 🏅`:`${d} dias de estudo nesta temporada · 2026 inteiro teve ${n}.`;}
+  return d>=5?` · ${d} pts acima de 2026 💪`:d<=-5?` · ${-d} pts abaixo de 2026`:" · igual a 2026";}
+function marco(area){const h=S.h?.qArea?.[area];if(!h)return "";
+  const n=TOP.filter(T=>T.area===area).reduce((s,T)=>s+R(T.id).filter(r=>r.t==="q").length,0);
+  return n===h+1?` · mais blocos de questões de ${AREAS[area].nome} que em 2026 inteiro 🏅`:"";}
 
 /* ── lançar ── */
-function registrar(id,r){const L=reg(id);L.push(Object.assign({d:hoje()},r));
+function registrar(id,r){const T=BYID[id];reg(id).push(Object.assign({d:hoje()},r));
+  if(r.t==="e"&&!ativa(T.area))S.ativas[T.area]=hoje();
   if(S.fase===1&&LEIT.every(T=>estudado(T.id))){S.fase=2;return "1ª leitura completa! 🎉 Começam as revisões.";}
-  if(r.t==="q"){const p=Math.round(r.a/r.q*100);return `${rotulo(BYID[id])}: ${r.a}/${r.q} (${p}%)${cmp2026(id,p)}${marcoQuestoes(BYID[id].area)}`;}
-  return `Estudado: ${rotulo(BYID[id])}`;}
-function acharTopico(txt){
-  const ws=norm(txt).split(/[^a-z0-9/]+/).filter(w=>w.length>=3&&!/^(estudei|revisei|questoes|questao|fiz|errei|acertei|li|reli|li)$/.test(w));
+  if(r.t==="q"){const p=Math.round(r.a/r.q*100);return `${rot(T)}: ${r.a}/${r.q} (${p}%)${cmp2026(id,p)}${marco(T.area)}`;}
+  if(r.t==="x")return `Erro em ${rot(T)}: volta amanhã`;
+  if(r.t==="r"){const d=dif(agenda(id),hoje());return `${rot(T)}: próxima em ${d} dias`;}
+  return `Estudado: ${rot(T)}`;}
+function achar(txt,lista){
+  const ws=norm(txt).split(/[^a-z0-9/]+/).filter(w=>w.length>=3&&!/^(estudei|revisei|questoes|questao|fiz|errei|acertei|reli)$/.test(w));
   if(!ws.length)return null;let best=null,bs=0;
-  for(const T of TOP){let s=0;const ex=norm(CHAVES[T.id]||"").split(" ");
+  for(const T of lista||TOP){let s=0;const ex=norm(CHAVES[T.id]||"").split(" ");
     for(const w of ws){if(ex.includes(w))s+=3;else if(T.chaves.includes(w))s+=2;else if(w.length>=4&&T.chaves.some(c=>c.startsWith(w)))s+=1;}
     if(s>bs){bs=s;best=T;}}
   return bs>=2?best:null;}
 function interpretar(f){
   return f.split(/\s*[·;,]\s*/).map(s=>s.trim()).filter(Boolean).map(seg=>{const n=norm(seg);
-    const m=n.match(/^(errei|erro)\s+(.+)$/);if(m)return {k:"x",ass:m[2].trim(),seg};
-    const fr=n.match(/(\d+)\s*\/\s*(\d+)/);const T=acharTopico(n.replace(/\d+\s*\/\s*\d+/g," "));
+    const m=n.match(/^(errei|erro)\s+(.+)$/);
+    if(m){const T=achar(m[2],TOP.filter(T=>T.modo==="q"))||achar(m[2]);return T?{k:"x",T,seg}:{k:"xl",ass:m[2].trim(),seg};}
+    const fr=n.match(/(\d+)\s*\/\s*(\d+)/);const T=achar(n.replace(/\d+\s*\/\s*\d+/g," "));
     if(!T)return {k:"?",seg};
     if(fr&&+fr[2]>0)return {k:"q",T,a:Math.min(+fr[1],+fr[2]),q:+fr[2],seg};
-    return {k:"e",T,seg};});}
+    return {k:T.modo==="q"?"r":"e",T,seg};});}
 const qIn=document.getElementById("q"),qGo=document.getElementById("qGo"),pills=document.getElementById("pills");
 function previa(){const v=qIn.value.trim();if(!v){pills.innerHTML="";qGo.disabled=true;return;}
   const it=interpretar(v);qGo.disabled=!it.some(i=>i.k!=="?");
-  pills.innerHTML=it.map(i=>i.k==="q"?`<span class="pill q">✏️ ${rotulo(i.T)} · ${i.a}/${i.q}</span>`:i.k==="e"?`<span class="pill e">📖 ${rotulo(i.T)}</span>`:i.k==="x"?`<span class="pill x">✕ errei ${i.ass}</span>`:`<span class="pill bad">? “${i.seg}”</span>`).join("");}
+  pills.innerHTML=it.map(i=>i.k==="q"?`<span class="pill q">✏️ ${rot(i.T)} · ${i.a}/${i.q}</span>`:i.k==="e"?`<span class="pill e">📖 ${rot(i.T)}</span>`:i.k==="r"?`<span class="pill e">↻ revisei ${rot(i.T)}</span>`:i.k==="x"?`<span class="pill x">✕ errei ${rot(i.T)}</span>`:i.k==="xl"?`<span class="pill x">✕ errei ${i.ass}</span>`:`<span class="pill bad">? “${i.seg}”</span>`).join("");}
 function lancar(){const it=interpretar(qIn.value.trim()).filter(i=>i.k!=="?");if(!it.length)return;
-  mudar(()=>{let m;it.forEach(i=>{if(i.k==="x")m=errei(i.ass);else m=registrar(i.T.id,i.k==="q"?{t:"q",q:i.q,a:i.a}:{t:"e"});});return it.length>1?`${it.length} lançamentos`:m;});
+  mudar(()=>{let m;it.forEach(i=>{
+    if(i.k==="xl"){const k=norm(i.ass);const a=S.ass[k]||(S.ass[k]={erros:[],iv:0,prox:null});a.erros.push(hoje());a.iv=1;a.prox=addDias(1);m=`Erro em ${k}: volta amanhã`;}
+    else m=registrar(i.T.id,i.k==="q"?{t:"q",q:i.q,a:i.a}:{t:i.k});});
+    return it.length>1?`${it.length} lançamentos`:m;});
   qIn.value="";previa();qIn.blur();}
-function errei(ass){const k=norm(ass);const a=S.ass[k]||(S.ass[k]={erros:[],iv:0,prox:null});a.erros.push(hoje());a.iv=1;a.prox=addDias(1);return `Errou ${k}: volta amanhã`;}
 qIn.addEventListener("input",previa);qIn.addEventListener("keydown",e=>{if(e.key==="Enter")lancar();});qGo.onclick=lancar;
 
 /* ── telas ── */
 let aba="hoje";
 function render(){
   const y=scrollY;
-  const pend=revisando()?LEIT.filter(T=>["late","due"].includes(situacao(T.id).k)).length:0;
-  document.getElementById("tabs").innerHTML=[["hoje","Hoje"],...Object.entries(AREAS).map(([a,A])=>[a,A.nome]),["cfg","⚙"]]
-    .map(([k,l])=>`<button class="tab${k==="cfg"?" cfg":""}" role="tab" aria-selected="${aba===k}" data-aba="${k}">${l}${k==="hoje"&&pend?`<b>${pend}</b>`:""}</button>`).join("");
-  document.getElementById("main").innerHTML=aba==="hoje"?telaHoje():aba==="cfg"?telaCfg():telaArea(aba);
+  const pend=TOP.filter(T=>vence(T.id)).length+Object.values(S.ass).filter(a=>a.prox&&a.prox<=hoje()).length;
+  document.getElementById("tabs").innerHTML=[["hoje","Hoje"],["analises","Análises"],...Object.entries(AREAS).map(([a,A])=>[a,A.nome]),["cfg","⚙"]]
+    .map(([k,l])=>`<button class="tab${AREAS[k]&&!ativa(k)?" off":""}" role="tab" aria-selected="${aba===k}" data-aba="${k}">${l}${k==="hoje"&&pend?`<b>${pend}</b>`:""}</button>`).join("");
+  document.getElementById("main").innerHTML=aba==="hoje"?telaHoje():aba==="analises"?telaAnalises():aba==="cfg"?telaCfg():telaArea(aba);
   scrollTo(0,y);
 }
 document.getElementById("tabs").onclick=e=>{const b=e.target.closest("[data-aba]");if(!b)return;aba=b.dataset.aba;render();scrollTo(0,0);b.scrollIntoView({inline:"center",block:"nearest"});};
 
 function linha(T,acaoLi){
-  const s=situacao(T.id),a=acerto(T.id),h=h26(T.id),u=R(T.id).at(-1);
-  const sub=[u?`último ${fmt(u.d)}`:null,a?`${a.a}/${a.q} questões`:null,h?`2026: ${h.n}×${h.ac!=null?" · "+h.ac+"%":""}`:null].filter(Boolean).join(" · ");
-  const dir=acaoLi&&!estudado(T.id)?`<button class="mini go" data-li="${T.id}" aria-label="Marcar como estudado">✓</button>`:`<span class="tag ${s.k}">${s.txt}</span>`;
-  return `<div class="item clk" data-top="${T.id}"><span class="dot" style="background:${AREAS[T.area].cor}"></span><div class="tx"><div class="t1 full">${T.title}</div>${sub?`<div class="t2">${sub}</div>`:""}</div>${dir}</div>`;
+  const s=situacao(T.id),a=acerto(T.id),u=R(T.id).at(-1),nx=R(T.id).filter(r=>r.t==="x").length;
+  const sub=[u?`último ${fmt(u.d)}`:null,a?`${a.a}/${a.q} questões`:null,nx?`errou ${nx}×`:null].filter(Boolean).join(" · ");
+  const dir=acaoLi&&!estudado(T.id)&&ativa(T.area)?`<button class="mini go" data-li="${T.id}" aria-label="Marcar como estudado">✓</button>`:`<span class="tag ${s.k}">${s.txt}</span>`;
+  return `<div class="item clk" data-top="${T.id}"><span class="dot" style="background:${AREAS[T.area].cor}"></span><div class="tx"><div class="t1 full">${T.nome}</div>${T.curto&&norm(T.curto)!==norm(T.oficial)?`<div class="of">${T.oficial}</div>`:""}${sub?`<div class="t2">${sub}</div>`:""}</div>${dir}</div>`;
+}
+function escolherMaterias(titulo){
+  return `<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>${titulo}</h3></div><div class="pb"><div class="startcard">`+
+   Object.entries(AREAS).filter(([a])=>!ativa(a)).map(([a,A])=>`<button data-start="${a}"><i style="background:${A.cor}"></i>${A.nome}</button>`).join("")+`</div></div></div>`;
 }
 
 function telaHoje(){
   const dias=Math.max(0,dif(S.prova,hoje()));
-  const lidos=LEIT.filter(T=>estudado(T.id)).length,falta=LEIT.length-lidos;
-  const sem=Math.max(1,dif(S.fimLeitura,hoje())/7);const porSem=Math.ceil(falta/sem);
-  let h=`<div class="hero">
-    <span class="fase">${S.fase===1?"Fase 1 · leitura de tudo":"Fase 2 · revisões"}</span>
+  const as=Object.keys(AREAS).filter(ativa);
+  const L=LEIT.filter(T=>as.includes(T.area)),lidos=L.filter(T=>estudado(T.id)).length,falta=L.length-lidos;
+  const foraFalta=LEIT.filter(T=>!as.includes(T.area)).length;
+  const sem=Math.max(1,dif(S.fimLeitura,hoje())/7),porSem=Math.ceil((falta+foraFalta)/sem);
+  let h=`<div class="hero"><span class="fase">${S.fase===1?"Fase 1 · leitura de tudo":"Fase 2 · revisões"}</span>
     <div class="big num">${dias}<small> dias para a prova</small></div>
-    <div style="font-size:13.5px;opacity:.92;margin-top:6px">${S.fase===1?`${lidos} de ${LEIT.length} lidos · ${falta?`${porSem} por semana até ${fmt(S.fimLeitura)}`:"leitura completa"}`:`${LEIT.filter(T=>situacao(T.id).k==="ok").length} tópicos em dia`}</div>
-    ${S.h?`<div style="font-size:12.5px;opacity:.85;margin-top:8px">${ritmo2026()}</div>`:""}
-  </div>`;
-
-  if(S.fase===1){
-    h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>A seguir</h3><span class="sub">toque ✓ quando terminar</span></div>`+fila(4).map(T=>linha(T,true)).join("")+`</div>`;
-  }
-  if(revisando()){
-    const due=LEIT.map(T=>({T,s:situacao(T.id)})).filter(x=>["late","due"].includes(x.s.k)).sort((a,b)=>a.s.o-b.s.o);
-    h+=`<div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Revisar hoje</h3><span class="sub num">${due.length}</span></div>`+
-      (due.length?due.slice(0,6).map(x=>linha(x.T)).join("")+(due.length>6?`<div class="empty" style="padding:10px">+${due.length-6} depois desses</div>`:""):`<div class="empty">Tudo em dia.</div>`)+`</div>`;
-  }
+    <div style="font-size:13.5px;opacity:.92;margin-top:6px">${as.length?`${as.map(a=>AREAS[a].nome).join(" + ")}: ${lidos}/${L.length}`:"Nenhuma matéria começada"}${S.fase===1&&falta+foraFalta?` · ritmo: ${porSem}/semana até ${fmt(S.fimLeitura)}`:""}</div></div>`;
+  if(!as.length)return h+escolherMaterias("Por onde começar?");
+  if(S.fase===1&&falta)h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>A seguir</h3><span class="sub">✓ quando terminar</span></div>`+fila(4).map(T=>linha(T,true)).join("")+`</div>`;
+  else if(S.fase===1&&!falta&&foraFalta)h+=escolherMaterias("Matérias começadas em dia. Próxima?");
+  const due=TOP.filter(T=>vence(T.id)).map(T=>({T,s:situacao(T.id)})).sort((a,b)=>a.s.o-b.s.o);
   const ass=Object.entries(S.ass).filter(([k,a])=>a.prox&&a.prox<=hoje());
-  if(ass.length)h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Gramática para rever</h3></div>`+ass.map(([k,a])=>linhaAss(k,a)).join("")+`</div>`;
-
-  // solidez frente a 2026: só aparece quando já há base para comparar
-  const cmp=LEIT.map(T=>{const a=acerto(T.id),hh=h26(T.id);return a&&hh&&hh.ac!=null?a.p-hh.ac:null;}).filter(x=>x!=null);
-  if(cmp.length>=3){const up=cmp.filter(d=>d>=5).length,eq=cmp.filter(d=>d>-5&&d<5).length,dn=cmp.filter(d=>d<=-5).length;
-    h+=`<div class="panel" style="--hc:var(--mint)"><div class="panel-h"><h3>Solidez frente a 2026</h3><span class="sub">${cmp.length} tópicos com questões</span></div><div class="pb"><div class="solid3">
-    <div style="background:var(--mint-soft)"><b>${up}</b><span>mais sólidos</span></div><div style="background:var(--sunk)"><b>${eq}</b><span>iguais</span></div><div style="background:var(--danger-soft)"><b>${dn}</b><span>mais frágeis</span></div></div></div></div>`;}
+  if(due.length||ass.length||revisando())h+=`<div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Revisar hoje</h3><span class="sub num">${due.length+ass.length}</span></div>`+
+    (due.length?due.slice(0,6).map(x=>linha(x.T)).join(""):"")+ass.map(([k,a])=>linhaAss(k,a)).join("")+(!due.length&&!ass.length?`<div class="empty">Tudo em dia.</div>`:"")+(due.length>6?`<div class="empty" style="padding:10px">+${due.length-6} depois desses</div>`:"")+`</div>`;
   return h;
 }
 function linhaAss(k,a){const d=a.prox?dif(a.prox,hoje()):null;
@@ -395,80 +409,122 @@ function linhaAss(k,a){const d=a.prox?dif(a.prox,hoje()):null;
   <button class="mini" data-assok="${k}" aria-label="Revisei">✓</button><button class="mini" data-assdel="${k}" aria-label="Apagar">✕</button></div>`;}
 
 function telaArea(a){
-  const ts=TOP.filter(T=>T.area===a),l=ts.filter(T=>T.modo==="l"),lidos=l.filter(T=>estudado(T.id)).length;
-  let h=`<div class="panel" style="--hc:${AREAS[a].cor}"><div class="panel-h"><h3>${AREAS[a].nome}</h3><span class="sub num" style="margin-left:auto">${lidos}/${l.length} lidos</span></div>
-   <div class="pb"><div class="bar"><span style="width:${lidos/l.length*100}%;background:${AREAS[a].cor}"></span></div></div>`;
-  const gs=[...new Set(l.map(T=>T.g))];
-  gs.forEach(g=>{if(g)h+=`<div class="grp">${g}</div>`;h+=l.filter(T=>T.g===g).map(T=>linha(T,S.fase===1)).join("");});
-  if(a==="LP"){
-    const L=Object.entries(S.ass);
-    h+=`<div class="grp">Gramática · estudo por questões</div>`+ts.filter(T=>T.modo==="q").map(T=>linha(T)).join("")+
-      (L.length?L.map(([k,x])=>linhaAss(k,x)).join(""):`<div class="empty" style="padding:12px">Lance erros escrevendo “errei regência” na barra de cima.</div>`);
-  }
+  const ts=TOP.filter(T=>T.area===a),l=ts.filter(T=>T.modo==="l"),lidos=l.filter(T=>estudado(T.id)).length,on=ativa(a);
+  let h=on?"":`<div class="banner">Pausada: não aparece no Hoje nem cobra revisões.<button data-start="${a}">Começar ${AREAS[a].nome}</button></div>`;
+  h+=`<div class="panel${on?"":" paused"}" style="--hc:${AREAS[a].cor}"><div class="panel-h"><h3>${AREAS[a].nome}</h3><span class="sub num" style="margin-left:auto">${lidos}/${l.length}</span>${on?`<button class="act" data-pausar="${a}">Pausar</button>`:""}</div>
+   <div class="pb"><div class="bar"><span style="width:${l.length?lidos/l.length*100:0}%;background:${AREAS[a].cor}"></span></div></div>`;
+  const gs=[...new Set(ts.map(T=>T.g))];
+  gs.forEach(g=>{if(g)h+=`<div class="grp">${g}</div>`;h+=ts.filter(T=>T.g===g).map(T=>linha(T,S.fase===1&&T.modo==="l")).join("");});
+  if(a==="LP"&&Object.keys(S.ass).length)h+=`<div class="grp">Outros erros lançados</div>`+Object.entries(S.ass).map(([k,x])=>linhaAss(k,x)).join("");
   return h+`</div>`;
 }
 
+/* ── ANÁLISES: o painel da aprovação ── */
+function diasEstudo(){const s=new Set();Object.values(S.top).forEach(t=>t.reg.forEach(r=>s.add(r.d)));Object.values(S.ass).forEach(a=>a.erros.forEach(d=>s.add(d)));S.sims.forEach(x=>s.add(x.d));return s;}
+function seqs(ds){let atual=0,d=hoje();if(!ds.has(d))d=addDias(-1);while(ds.has(d)){atual++;d=addDias(-1,d);}
+  let melhor=0,c=0,prev=null;[...ds].sort().forEach(x=>{c=prev&&dif(x,prev)===1?c+1:1;melhor=Math.max(melhor,c);prev=x;});return {atual,melhor};}
+function telaAnalises(){
+  const ds=diasEstudo(),sq=seqs(ds),lidos=LEIT.filter(T=>estudado(T.id)).length,ac=acerto(TOP.map(T=>T.id));
+  let h=`<div class="kpis">
+   <div class="kpi"><b>${Math.max(0,dif(S.prova,hoje()))}</b><span>dias para a prova</span></div>
+   <div class="kpi"><b>${Math.round(lidos/LEIT.length*100)}%</b><span>do edital lido (${lidos}/${LEIT.length})</span></div>
+   <div class="kpi"><b>${ac?ac.q:0}</b><span>questões · ${ac?ac.p+"% de acerto":"nenhuma ainda"}</span></div>
+   <div class="kpi"><b>${ds.size}</b><span>dias de estudo · sequência ${sq.atual} (melhor ${sq.melhor})</span></div></div>`;
+  // atividade
+  const ini=addDias(-55);const cnt={};Object.values(S.top).forEach(t=>t.reg.forEach(r=>{cnt[r.d]=(cnt[r.d]||0)+1;}));
+  let cel="";for(let i=0;i<56;i++){const d=addDias(i,ini),n=cnt[d]||0;cel+=`<i class="${n>=5?"l3":n>=3?"l2":n?"l1":""}${d===hoje()?" hj":""}" title="${fmt(d)}: ${n}"></i>`;}
+  // a grade vai por colunas = semanas
+  h+=`<div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Últimas 8 semanas</h3><span class="sub">cada quadrado é um dia</span></div><div class="pb"><div class="heat">${cel}</div></div></div>`;
+  // por matéria
+  h+=`<div class="panel" style="--hc:var(--violet)"><div class="panel-h"><h3>Por matéria</h3></div>`+Object.entries(AREAS).map(([a,A])=>{
+    const l=LEIT.filter(T=>T.area===a),li=l.filter(T=>estudado(T.id)).length,x=acerto(TOP.filter(T=>T.area===a).map(T=>T.id));
+    return `<div class="mrow" data-aba-ir="${a}" style="cursor:pointer"><div style="font-weight:700;font-size:14px">${A.nome} ${ativa(a)?"":`<span class="tag new">pausada</span>`}</div>
+      <div class="sub num">${li}/${l.length} · ${x?`${x.p}% em ${x.q}q`:"sem questões"}</div><div class="bar"><span style="width:${l.length?li/l.length*100:0}%;background:${A.cor}"></span></div></div>`;}).join("")+`</div>`;
+  // pontos fracos
+  const fr=TOP.map(T=>({T,a:acerto(T.id),x:R(T.id).filter(r=>r.t==="x").length})).filter(o=>(o.a&&o.a.q>=5)||o.x).sort((p,q)=>((p.a?p.a.p:50)-p.x*8)-((q.a?q.a.p:50)-q.x*8)).slice(0,5);
+  h+=`<div class="panel" style="--hc:var(--danger)"><div class="panel-h"><h3>Pontos fracos</h3><span class="sub">onde mais erra</span></div>`+
+   (fr.length?fr.map(o=>`<div class="item clk" data-top="${o.T.id}"><span class="dot" style="background:${AREAS[o.T.area].cor}"></span><div class="tx"><div class="t1">${rot(o.T)}</div><div class="t2">${[o.a?`${o.a.p}% em ${o.a.q} questões`:null,o.x?`errou ${o.x}×`:null].filter(Boolean).join(" · ")}</div></div></div>`).join(""):`<div class="empty">Aparece quando você lançar questões.</div>`)+`</div>`;
+  // simulados
+  const sims=S.sims.slice().reverse();
+  h+=`<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Simulados e provas anteriores</h3><button class="act" data-acao="novoSim">+ Lançar</button></div>`+
+   (sims.length?sims.map((x,i)=>{const p=Math.round(x.a/x.q*100),ant=sims[i+1],dp=ant?p-Math.round(ant.a/ant.q*100):null;
+     return `<div class="item"><div class="tx"><div class="t1">${esc(x.nome)}</div><div class="t2">${fmt(x.d)} · ${x.a}/${x.q}${dp!=null?` · ${dp>=0?"+":""}${dp} pts`:""}</div></div><span class="tag ${p>=80?"ok":p>=65?"due":"late"}">${p}%</span><button class="mini" data-simdel="${S.sims.length-1-i}" aria-label="Apagar">✕</button></div>`;}).join(""):`<div class="empty">Faça uma prova anterior completa por mês e lance aqui para ver sua nota subir.</div>`)+`</div>`;
+  // 2026 só aqui, recolhido
+  if(S.h){const H=S.h;const cmp=TOP.map(T=>{const a=acerto(T.id),hh=h26(T.id);return a&&hh&&hh.ac!=null?a.p-hh.ac:null;}).filter(x=>x!=null);
+    const up=cmp.filter(d=>d>=5).length,eq=cmp.filter(d=>d>-5&&d<5).length,dn=cmp.filter(d=>d<=-5).length;
+    h+=`<details class="box"><summary>Comparar com 2026</summary><div class="pb">
+     <div class="solid3" style="margin-bottom:12px"><div style="background:var(--sunk)"><b>${ds.size}</b><span>dias em 2027</span></div><div style="background:var(--sunk)"><b>${H.dias.length}</b><span>dias em 2026</span></div><div style="background:var(--sunk)"><b>${H.revs}</b><span>registros 2026</span></div></div>
+     <div class="lab">Blocos de questões · 2027 × 2026</div>${Object.entries(AREAS).map(([a,A])=>{const n=TOP.filter(T=>T.area===a).reduce((s,T)=>s+R(T.id).filter(r=>r.t==="q").length,0);return `<div class="hist"><span class="k">${A.nome}</span><span class="sub num">${n} × ${H.qArea[a]||0}</span></div>`;}).join("")}<div style="height:12px"></div>${cmp.length?`<div class="lab" style="margin-top:0">Tópicos com questões nos dois anos</div><div class="solid3"><div style="background:var(--mint-soft)"><b>${up}</b><span>mais sólidos</span></div><div style="background:var(--sunk)"><b>${eq}</b><span>iguais</span></div><div style="background:var(--danger-soft)"><b>${dn}</b><span>mais frágeis</span></div></div>`:`<div class="sub">A comparação de acertos aparece quando você lançar questões dos mesmos tópicos.</div>`}
+     <a class="btn-line" style="margin-top:12px" href="2026.html">Abrir o site de 2026</a></div></details>`;}
+  return h;
+}
+
 function telaCfg(){
-  const H=S.h;
   return `<div class="panel" style="--hc:var(--tang)"><div class="panel-h"><h3>Datas</h3></div><div class="pb">
     <div class="field"><label class="sub">Prova (ajuste quando sair o edital)</label><input type="date" data-cfg="prova" value="${S.prova}"></div>
     <div class="field"><label class="sub">Terminar a 1ª leitura até</label><input type="date" data-cfg="fimLeitura" value="${S.fimLeitura}"></div></div></div>
   <div class="panel" style="--hc:var(--blue)"><div class="panel-h"><h3>Fase</h3></div><div class="pb">
-    <label class="sw"><input type="checkbox" data-cfg="revNaLeitura" ${S.revNaLeitura?"checked":""}> Mostrar revisões já durante a 1ª leitura</label>
+    <label class="sw"><input type="checkbox" data-cfg="revNaLeitura" ${S.revNaLeitura?"checked":""}> Cobrar revisões já durante a 1ª leitura</label>
     <button class="btn" data-acao="fase">${S.fase===1?"Começar a fase de revisões agora":"Voltar para a 1ª leitura"}</button></div></div>
-  ${H?`<div class="panel trophy" style="--hc:var(--amber)"><div class="panel-h"><h3>Temporada 2026</h3><span class="sub">guardada, só leitura</span></div><div class="pb"><div class="g">
-    <div><b>${H.revs}</b><span>revisões</span></div><div><b>${H.dias.length}</b><span>dias de estudo</span></div>
-    <div><b>${Object.values(H.qArea).reduce((a,b)=>a+b,0)}</b><span>blocos de questões</span></div><div><b>${Object.keys(H.t).length}</b><span>tópicos vistos</span></div></div>
-    <a class="btn-line" style="margin-top:10px" href="2026.html">Abrir o site de 2026</a></div></div>`:""}
   <div class="panel" style="--hc:var(--mint)"><div class="panel-h"><h3>Mais</h3></div><div class="pb" style="display:grid;gap:8px">
     <button class="btn" data-acao="backup">Baixar cópia de segurança</button>
     <button class="btn" data-acao="instalar">Instalar como app</button>
     <div class="sub" style="text-align:center">Salva sozinho no aparelho e na nuvem · versão ${VERSAO}</div></div></div>`;
 }
 
-/* ── folha do tópico ── */
+/* ── folhas ── */
 function abrirFolha(html){const L=document.getElementById("layer");L.querySelector(".sheet").innerHTML=`<div class="grab"></div><button class="ico x" data-fechar>✕</button>`+html;L.classList.add("on");}
 function fecharFolha(){document.getElementById("layer").classList.remove("on");}
 document.querySelector("#layer .back").onclick=fecharFolha;
 let nq=10,na=8;
-function folha(id){
-  const T=BYID[id],h=h26(id),a=acerto(id),L=R(id).slice().reverse();
-  abrirFolha(`<h2>${T.title}</h2><div class="meta">${AREAS[T.area].nome}${T.g?" · "+T.g:""}</div>
-  ${h?`<div class="cmp">2026: ${h.n} revisões${h.ac!=null?` · média ${h.ac}%`:""}${a&&h.ac!=null?` · agora ${a.p}%`:""}</div>`:""}
-  ${T.modo==="l"?`<button class="btn tang" data-li="${id}">📖 ${estudado(id)?"Estudei de novo":"Estudei"}</button>`:`<div class="cmp">Obra de consulta: estude por questões e lance os erros por assunto.</div>`}
-  <div class="lab">Questões</div>
-  <div class="nrow">
+function caixas(){return `<div class="nrow">
     <div class="nbox"><label>Fiz</label><div><button data-n="q" data-d="-1">−</button><input id="nq" type="number" inputmode="numeric" value="${nq}"><button data-n="q" data-d="1">+</button></div></div>
-    <div class="nbox"><label>Acertei</label><div><button data-n="a" data-d="-1">−</button><input id="na" type="number" inputmode="numeric" value="${na}"><button data-n="a" data-d="1">+</button></div></div>
-  </div>
+    <div class="nbox"><label>Acertei</label><div><button data-n="a" data-d="-1">−</button><input id="na" type="number" inputmode="numeric" value="${na}"><button data-n="a" data-d="1">+</button></div></div></div>`;}
+function folha(id){
+  const T=BYID[id],h=h26(id),L=R(id).slice().reverse();
+  abrirFolha(`<h2>${T.nome}</h2><div class="meta">${T.curto&&norm(T.curto)!==norm(T.oficial)?T.oficial+"<br>":""}${AREAS[T.area].nome}${T.g?" · "+T.g:""}</div>
+  ${T.modo==="l"?`<button class="btn tang" data-li="${id}">📖 ${estudado(id)?"Estudei de novo":"Estudei"}</button>`
+   :`<div class="two"><button class="btn" data-rv="${id}" data-t="r">↻ Revisei</button><button class="btn tang" data-rv="${id}" data-t="x">✕ Errei</button></div>`}
+  <div class="lab">Questões</div>${caixas()}
   <button class="btn solid" style="margin-top:8px" data-salvarq="${id}">Salvar questões</button>
   <div class="lab">Anotações</div>
   <textarea class="note" data-nota="${id}" placeholder="Distinções, pegadinhas…">${esc(S.notas[id]||"")}</textarea>
-  ${L.length?`<div class="lab">Histórico 2027</div>`+L.map((r,i)=>`<div class="hist"><span class="d">${fmt(r.d)}</span><span class="k">${r.t==="q"?`✏️ ${r.a}/${r.q}`:"📖 estudo"}</span><button data-del="${id}" data-i="${L.length-1-i}" aria-label="Apagar">✕</button></div>`).join(""):""}`);
+  ${L.length?`<div class="lab">Histórico</div>`+L.map((r,i)=>`<div class="hist"><span class="d">${fmt(r.d)}</span><span class="k">${r.t==="q"?`✏️ ${r.a}/${r.q}`:r.t==="x"?"✕ errei":r.t==="r"?"↻ revisei":"📖 estudo"}</span><button data-del="${id}" data-i="${L.length-1-i}" aria-label="Apagar">✕</button></div>`).join(""):""}
+  ${h?`<details class="sm"><summary>Ver 2026</summary><div class="sub">${h.n} registros${h.ac!=null?` · média ${h.ac}% (${h.acs.join("%, ")}%)`:""}</div></details>`:""}`);
 }
-const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+function folhaSim(){abrirFolha(`<h2>Lançar simulado</h2><div class="meta">Prova anterior ou simulado completo.</div>
+  <div class="field"><input id="simNome" placeholder="Ex.: EsFCEx 2024 completa"></div>${caixas()}
+  <button class="btn solid" style="margin-top:10px" data-salvarsim>Salvar</button>`);document.getElementById("nq").value=60;document.getElementById("na").value=45;}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
 
 /* ── cliques ── */
 document.addEventListener("click",e=>{
   const g=k=>e.target.closest(`[data-${k}]`);let b;
   if(g("fechar"))return fecharFolha();
-  if(b=g("li")){e.stopPropagation();const id=b.dataset.li;const aberta=document.getElementById("layer").classList.contains("on");mudar(()=>registrar(id,{t:"e"}));if(aberta)fecharFolha();return;}
+  if(b=g("start")){const a=b.dataset.start;return mudar(()=>{S.ativas[a]=hoje();return `${AREAS[a].nome} começada`;});}
+  if(b=g("pausar")){const a=b.dataset.pausar;return mudar(()=>{delete S.ativas[a];return `${AREAS[a].nome} pausada`;});}
+  if(b=g("li")){e.stopPropagation();const id=b.dataset.li;const ab=document.getElementById("layer").classList.contains("on");mudar(()=>registrar(id,{t:"e"}));if(ab)fecharFolha();return;}
+  if(b=g("rv")){const id=b.dataset.rv;mudar(()=>registrar(id,{t:b.dataset.t}));fecharFolha();return;}
   if(b=g("n")){const k=b.dataset.n;const el=document.getElementById("n"+k);let v=Math.max(0,(+el.value||0)+ +b.dataset.d);
     if(k==="a")v=Math.min(v,+document.getElementById("nq").value||0);el.value=v;if(k==="q"&&+document.getElementById("na").value>v)document.getElementById("na").value=v;return;}
   if(b=g("salvarq")){const q=+document.getElementById("nq").value||0,a=Math.min(+document.getElementById("na").value||0,q);
     if(!q)return toast("Coloque quantas questões fez.");nq=q;na=a;const id=b.dataset.salvarq;mudar(()=>registrar(id,{t:"q",q,a}));fecharFolha();return;}
+  if(g("salvarsim")){const q=+document.getElementById("nq").value||0,a=Math.min(+document.getElementById("na").value||0,q),nome=document.getElementById("simNome").value.trim()||"Simulado";
+    if(!q)return toast("Coloque quantas questões tinha.");mudar(()=>{S.sims.push({d:hoje(),nome,q,a});return `${nome}: ${Math.round(a/q*100)}%`;});fecharFolha();return;}
+  if(b=g("simdel"))return mudar(()=>{S.sims.splice(+b.dataset.simdel,1);},"Apagado");
   if(b=g("del")){const id=b.dataset.del;mudar(()=>{S.top[id].reg.splice(+b.dataset.i,1);},"Apagado");folha(id);return;}
   if(b=g("top"))return folha(b.dataset.top);
+  if(b=g("aba-ir")){aba=b.dataset.abaIr;render();return scrollTo(0,0);}
   if(b=g("assok")){const k=b.dataset.assok,nx={1:3,3:7,7:15};return mudar(()=>{const a=S.ass[k];a.iv=nx[a.iv]||null;a.prox=a.iv?addDias(a.iv):null;return a.iv?`${k}: volta em ${a.iv} dias`:`${k}: dominado ✓`;});}
   if(b=g("assdel"))return mudar(()=>{delete S.ass[b.dataset.assdel];},"Apagado");
   if(b=g("acao")){const a=b.dataset.acao;
+    if(a==="novoSim")return folhaSim();
     if(a==="fase")return mudar(()=>{S.fase=S.fase===1?2:1;return S.fase===2?"Fase de revisões ligada":"De volta à 1ª leitura";});
     if(a==="backup"){const u=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:"application/json"}));const l=document.createElement("a");l.href=u;l.download=`estudos-${hoje()}.json`;l.click();URL.revokeObjectURL(u);return;}
     if(a==="instalar")return instalar();}
 });
 document.addEventListener("input",e=>{const t=e.target;
   if(t.dataset.nota!==undefined){S.notas[t.dataset.nota]=t.value;if(!t.value)delete S.notas[t.dataset.nota];salvar();}
-  if(t.id==="nq"||t.id==="na"){/* digitação livre */}
   if(t.dataset.cfg&&t.type==="date"&&t.value){S[t.dataset.cfg]=t.value;salvar();}});
 document.addEventListener("change",e=>{const t=e.target;if(t.dataset.cfg==="revNaLeitura"){S.revNaLeitura=t.checked;salvar();render();}});
 
